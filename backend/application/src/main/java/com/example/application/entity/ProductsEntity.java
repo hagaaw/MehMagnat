@@ -1,4 +1,10 @@
 package com.example.application.entity;
 
-public class ProductsEntity {
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name="products")
+public class ProductEntity {
 }
