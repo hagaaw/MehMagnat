@@ -26,6 +26,7 @@ public class SizeEntity {
     @Column(name="description", nullable = false)
     private String description;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "size")
     private List<ProductEntity> products;
 

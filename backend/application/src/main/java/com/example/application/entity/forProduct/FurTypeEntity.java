@@ -23,7 +23,7 @@ public class FurTypeEntity {
     @Column(name="name", nullable = false)
     private String name;
 
-
+    @JsonIgnore
     @OneToMany(mappedBy = "furType")
     private List<ProductEntity> products;
 

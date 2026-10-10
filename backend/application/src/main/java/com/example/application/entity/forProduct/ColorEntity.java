@@ -23,6 +23,7 @@ public class ColorEntity {
     @Column(name="name", nullable = false)
     private String name;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "color")
     private List<ProductEntity> products;
 
