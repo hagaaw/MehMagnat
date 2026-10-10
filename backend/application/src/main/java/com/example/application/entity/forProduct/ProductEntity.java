@@ -43,17 +43,17 @@ public class ProductEntity {
     @Column(name="created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @ManyToOne(cascade = CascadeType.PERSIST)
+    @ManyToOne
     @JoinColumn(name="fur_type_id")
     private FurTypeEntity furType;
 
 
-    @ManyToOne(cascade = CascadeType.PERSIST)
+    @ManyToOne
     @JoinColumn(name="color_id")
     private ColorEntity color;
 
 
-    @ManyToOne(cascade = CascadeType.PERSIST)
+    @ManyToOne
     @JoinColumn(name="size_id")
     private SizeEntity size;
 

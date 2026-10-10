@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class FurTypeService {
@@ -20,5 +21,13 @@ public class FurTypeService {
 
     public List<FurTypeEntity> getAllFurTypes() {
         return furTypeRepository.findAll();
+    }
+
+    public Optional<FurTypeEntity> findByFurType(FurTypeEntity furType) {
+        return furTypeRepository.findByName(furType.getName());
+    }
+
+    public void save(FurTypeEntity furType) {
+        furTypeRepository.save(furType);
     }
 }
