@@ -1,6 +1,7 @@
-package com.example.application.entity;
+package com.example.application.entity.forProduct;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,20 +33,43 @@ public class ProductEntity {
     @Column(name="quantity_on_hand", nullable = false)
     private int quantityOnHand;
 
+    @Column(name="status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Status status;
+
     @Column(name="quantity_reserved", nullable = false)
     private int quantityReserved;
 
     @Column(name="created_at", nullable = false)
-    private LocalDateTime created_at;
+    private LocalDateTime createdAt;
+
+    @JsonIgnore
+    @ManyToOne(cascade = CascadeType.PERSIST)
+    @JoinColumn(name="fur_type_id")
+    private FurTypeEntity furType;
+
+    @JsonIgnore
+    @ManyToOne(cascade = CascadeType.PERSIST)
+    @JoinColumn(name="color_id")
+    private ColorEntity color;
+
+    @JsonIgnore
+    @ManyToOne(cascade = CascadeType.PERSIST)
+    @JoinColumn(name="size_id")
+    private SizeEntity size;
 
     public ProductEntity(String sku, String title,
                          BigDecimal listPrice, int quantityOnHand,
-                         int quantityReserved, LocalDateTime created_at) {
+                         int quantityReserved, LocalDateTime createdAt,
+                         Status status) {
         this.sku = sku;
         this.title = title;
         this.listPrice = listPrice;
         this.quantityOnHand = quantityOnHand;
         this.quantityReserved = quantityReserved;
-        this.created_at = created_at;
+        this.createdAt = createdAt;
+        this.status = status;
     }
+
+
 }
