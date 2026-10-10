@@ -1,18 +1,14 @@
 package com.example.application.controller;
 
 
-import com.example.application.dto.ProductRequest;
 import com.example.application.entity.forProduct.*;
 import com.example.application.service.ProductService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -34,21 +30,10 @@ public class ProductController {
 
     @PostMapping("/add")
     public ResponseEntity<ProductEntity> addProduct(
-            @RequestParam String sku,
-            @RequestParam String title,
-            @RequestParam int quantityOnHand,
-            @RequestParam int quantityReserved,
-            @RequestParam BigDecimal price,
-
-            @RequestBody ProductRequest productRequest
+            @RequestBody ProductEntity product
 
             ){
-        ProductEntity product = new ProductEntity(sku,
-                title, price, quantityOnHand, quantityReserved,
-                LocalDateTime.now(),Status.FREE);
-        product.setFurType(productRequest.getFurType());
-        product.setColor(productRequest.getColor());
-        product.setSize(productRequest.getSize());
+
 
 
         productService.saveToDB(product);
