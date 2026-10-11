@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-public class Employee {
+public class EmployeeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="id")
@@ -38,10 +38,10 @@ public class Employee {
     @Column(name="created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    public Employee(String fullName, String phone,
-                    String email,
-                    EmployeeRole role,
-                    Boolean isActive) {
+    public EmployeeEntity(String fullName, String phone,
+                          String email,
+                          EmployeeRole role,
+                          Boolean isActive) {
         this.fullName = fullName;
         this.phone = phone;
         this.email = email;
