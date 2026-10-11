@@ -29,11 +29,9 @@ public class ReservationEntity {
     @JoinColumn(name = "customer_id", nullable = false)
     private CustomerEntity customer;
 
-    @ManyToOne
-    @JoinColumn(name = "created_by_employeed_id", nullable = false)
-    private EmployeeEntity employee;
 
     @Column(name="status",nullable = false)
+    @Enumerated(EnumType.STRING)
     private ReservationStatus status;
 
     @Column(name="start_at", nullable = false)
@@ -50,7 +48,6 @@ public class ReservationEntity {
 
     public ReservationEntity(String reservationNum,
                              CustomerEntity customer,
-                             EmployeeEntity employee,
                              ReservationStatus status,
                              LocalDateTime startAt,
                              LocalDateTime endAt,
@@ -58,7 +55,6 @@ public class ReservationEntity {
                              String comment) {
         this.reservationNum = reservationNum;
         this.customer = customer;
-        this.employee = employee;
         this.status = status;
         this.startAt = startAt;
         this.endAt = endAt;
@@ -68,14 +64,12 @@ public class ReservationEntity {
 
     public ReservationEntity(
                              CustomerEntity customer,
-                             EmployeeEntity employee,
                              ReservationStatus status,
                              LocalDateTime startAt,
                              LocalDateTime endAt,
                              LocalDateTime createdAt,
                              String comment) {
         this.customer = customer;
-        this.employee = employee;
         this.status = status;
         this.startAt = startAt;
         this.endAt = endAt;
