@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.context.annotation.Configuration;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name="reservations_items")
 @Getter
@@ -23,7 +25,7 @@ public class ReservationItemEntity {
     private Integer quantity;
 
     @Column(name="unit_price", nullable = false)
-    private Integer unitPrice; //скидка за штуку
+    private BigDecimal unitPrice; //цена за штуку
 
     @Column(name = "discount_amount", nullable = false)
     private Double discountAmount; //скидка за единицу
@@ -37,4 +39,15 @@ public class ReservationItemEntity {
     @JoinColumn(name="product_id", nullable = false)
     private ProductEntity product;
 
+    public ReservationItemEntity(Integer quantity,
+                                 BigDecimal unitPrice,
+                                 Double discountAmount,
+                                 ReservationEntity reservation,
+                                 ProductEntity product) {
+        this.quantity = quantity;
+        this.unitPrice = unitPrice;
+        this.discountAmount = discountAmount;
+        this.reservation = reservation;
+        this.product = product;
+    }
 }

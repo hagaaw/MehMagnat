@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -35,10 +36,10 @@ public class ReservationEntity {
     private ReservationStatus status;
 
     @Column(name="start_at", nullable = false)
-    private LocalDateTime startAt;
+    private LocalDate startAt;
 
     @Column(name="end_at", nullable = false)
-    private LocalDateTime endAt;
+    private LocalDate endAt;
 
     @Column(name="created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -49,8 +50,8 @@ public class ReservationEntity {
     public ReservationEntity(String reservationNum,
                              CustomerEntity customer,
                              ReservationStatus status,
-                             LocalDateTime startAt,
-                             LocalDateTime endAt,
+                             LocalDate startAt,
+                             LocalDate endAt,
                              LocalDateTime createdAt,
                              String comment) {
         this.reservationNum = reservationNum;
@@ -65,8 +66,8 @@ public class ReservationEntity {
     public ReservationEntity(
                              CustomerEntity customer,
                              ReservationStatus status,
-                             LocalDateTime startAt,
-                             LocalDateTime endAt,
+                             LocalDate startAt,
+                             LocalDate endAt,
                              LocalDateTime createdAt,
                              String comment) {
         this.customer = customer;
