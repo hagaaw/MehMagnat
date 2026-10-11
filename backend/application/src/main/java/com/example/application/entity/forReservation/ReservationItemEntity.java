@@ -9,7 +9,7 @@ import lombok.Setter;
 import org.springframework.context.annotation.Configuration;
 
 @Entity
-@Table(name="reservations")
+@Table(name="reservations_items")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -29,12 +29,12 @@ public class ReservationItemEntity {
     private Double discountAmount; //скидка за единицу
 
 
-    @ManyToOne
-    @JoinColumn(name="reservation_id")
+    @OneToOne
+    @JoinColumn(name="reservation_id", nullable = false)
     private ReservationEntity reservation;
 
-    @ManyToOne
-    @JoinColumn(name="product_id")
+    @OneToOne
+    @JoinColumn(name="product_id", nullable = false)
     private ProductEntity product;
 
 }
