@@ -26,11 +26,11 @@ public class ReservationEntity {
 
 
     @ManyToOne
-    @JoinColumn(name = "customer_id", nullable = false)
+    @JoinColumn(name = "customer_id")
     private CustomerEntity customer;
 
     @ManyToOne
-    @JoinColumn(name = "created_by_employeed_id", nullable = false)
+    @JoinColumn(name = "created_by_employeed_id")
     private EmployeeEntity employee;
 
     @Column(name="status",nullable = false)
