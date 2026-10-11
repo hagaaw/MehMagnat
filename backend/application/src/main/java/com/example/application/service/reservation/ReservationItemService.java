@@ -14,7 +14,7 @@ public class ReservationItemService {
         this.reservationItemRepository = reservationItemRepository;
     }
 
-    public Boolean checkOnValid(String sku, LocalDate startAt, LocalDate endAt) {
+    public Integer checkOnValid(String sku, LocalDate startAt, LocalDate endAt) {
         return reservationItemRepository.isItemBusy(sku, startAt, endAt);
     }
 

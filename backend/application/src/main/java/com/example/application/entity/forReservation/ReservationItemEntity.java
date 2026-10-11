@@ -31,7 +31,7 @@ public class ReservationItemEntity {
     private Double discountAmount; //скидка за единицу
 
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name="reservation_id", nullable = false)
     private ReservationEntity reservation;
 
