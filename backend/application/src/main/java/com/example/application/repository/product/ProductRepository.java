@@ -1,4 +1,4 @@
-package com.example.application.repository;
+package com.example.application.repository.product;
 
 
 import com.example.application.entity.forProduct.ProductEntity;

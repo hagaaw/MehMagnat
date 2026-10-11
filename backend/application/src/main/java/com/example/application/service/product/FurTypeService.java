@@ -1,8 +1,8 @@
-package com.example.application.service;
+package com.example.application.service.product;
 
 
 import com.example.application.entity.forProduct.FurTypeEntity;
-import com.example.application.repository.FurTypeRepository;
+import com.example.application.repository.product.FurTypeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

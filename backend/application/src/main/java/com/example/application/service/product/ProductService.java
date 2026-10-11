@@ -1,16 +1,14 @@
-package com.example.application.service;
+package com.example.application.service.product;
 
 
 import com.example.application.entity.forProduct.ColorEntity;
 import com.example.application.entity.forProduct.FurTypeEntity;
 import com.example.application.entity.forProduct.ProductEntity;
 import com.example.application.entity.forProduct.SizeEntity;
-import com.example.application.repository.ProductRepository;
-import com.example.application.repository.SizeRepository;
+import com.example.application.repository.product.ProductRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.RequestEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

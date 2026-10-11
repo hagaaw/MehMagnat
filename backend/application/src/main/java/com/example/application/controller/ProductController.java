@@ -2,7 +2,7 @@ package com.example.application.controller;
 
 
 import com.example.application.entity.forProduct.*;
-import com.example.application.service.ProductService;
+import com.example.application.service.product.ProductService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
