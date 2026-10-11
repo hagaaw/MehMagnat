@@ -29,7 +29,7 @@ public class ReservationItemEntity {
     private Double discountAmount; //скидка за единицу
 
 
-    @OneToOne(cascade = CascadeType.REMOVE)
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name="reservation_id", nullable = false)
     private ReservationEntity reservation;
 

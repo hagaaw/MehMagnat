@@ -27,7 +27,7 @@ public class SaleItemEntity {
 
 
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name="sale_id",nullable = false)
     private SaleEntity sale;
 
