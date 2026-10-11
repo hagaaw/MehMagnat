@@ -12,9 +12,7 @@ import com.example.application.service.reservation.ReservationItemService;
 import com.example.application.service.reservation.ReservationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -44,41 +42,12 @@ public class CustomerController {
     public ResponseEntity<?> madeReservation(
             @RequestBody ListProductsAndCostumerDto listProductsAndCostumerDto
             ){
-        int count = 0;
-        var customer = customerService.saveDB(listProductsAndCostumerDto.getCustomer());
-        customerService.saveDB(customer);
-        ReservationEntity reservation = reservationService.getNewReservation(customer,
-                listProductsAndCostumerDto.getStartAt(),
-                listProductsAndCostumerDto.getEndAt());
-        for(var dtoProduct: listProductsAndCostumerDto.getSkuAndCount()){
-            ProductEntity product = productService.findBySku(dtoProduct.getSku());
-            if (productService.findBySku(dtoProduct.getSku()).getQuantityReserved()
-                    < dtoProduct.getCount()){
-                continue;
-            }
-            logger.info(reservationItemService.checkOnValid(dtoProduct.getSku(),
-                    listProductsAndCostumerDto.getStartAt(),
-                    listProductsAndCostumerDto.getEndAt()).toString());
 
-            if (!reservationItemService.checkOnValid(dtoProduct.getSku(),
-                    listProductsAndCostumerDto.getStartAt(),
-                    listProductsAndCostumerDto.getEndAt())){
+        Boolean isCreate = customerService.madeReservation(listProductsAndCostumerDto);
+        if (isCreate){
+            return ResponseEntity.ok(isCreate);
+        }
+        return ResponseEntity.status(400).body(isCreate);
 
-                ReservationItemEntity reservationItemEntity = new ReservationItemEntity(
-                        dtoProduct.getCount(),
-                        product.getListPrice(),
-                        0d,
-                        reservation,
-                        product
-                );
-                reservationItemService.save(reservationItemEntity);
-                count++;
-            }
-        }
-        if (count != 0){
-            reservation.setStatus(ReservationStatus.ACTUAL);
-            return ResponseEntity.status(200).body(true);
-        }
-        return ResponseEntity.status(400).body(false);
     }
 }

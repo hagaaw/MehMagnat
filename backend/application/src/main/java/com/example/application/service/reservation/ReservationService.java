@@ -25,7 +25,7 @@ public class ReservationService {
 
     public ReservationEntity getNewReservation(CustomerEntity customer, LocalDate startAt, LocalDate endAt) {
 
-        return new ReservationEntity(
+        var reservation = new ReservationEntity(
                 generatedUniqueNum(),
                 customer,
                 ReservationStatus.ACTUAL,
@@ -34,6 +34,14 @@ public class ReservationService {
                 LocalDateTime.now(),
                 "новая бронь"
         );
+
+        reservationRepository.save(reservation);
+
+
+
+        return reservation;
+
+
 
     }
 
