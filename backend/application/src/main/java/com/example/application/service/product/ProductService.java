@@ -1,6 +1,7 @@
 package com.example.application.service.product;
 
 
+
 import com.example.application.entity.forProduct.ColorEntity;
 import com.example.application.entity.forProduct.FurTypeEntity;
 import com.example.application.entity.forProduct.ProductEntity;
@@ -13,13 +14,13 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
+
+
+import static com.example.application.config.AppConfig.*;
 
 @Service
 public class ProductService {
-    private static final String CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    private static final Random random = new Random();
-    private static final int len = 15;
+
 
     private final FurTypeService furTypeService;
     private Logger logger = LoggerFactory.getLogger(ProductService.class);
@@ -59,27 +60,16 @@ public class ProductService {
         }else{
             product.setColor(color.get());
         }
-        product.setSku(generatedUniqueSku());
         productRepository.save(product);
     }
 
-    private String generatedUniqueSku() {
-        String sku;
-        do {
-            sku = generateRandomString();
-        } while (productRepository.existsBySku(sku));
-        return sku;
-    }
 
-    private String generateRandomString() {
-        StringBuilder sb = new StringBuilder(len);
-        for (int i = 0; i < len; i++) {
-            sb.append(CHARS.charAt(random.nextInt(CHARS.length())));
-        }
-        return sb.toString();
-    }
 
     public List<ProductEntity> getAll() {
         return productRepository.findAll();
+    }
+
+    public ProductEntity findBySku(String sku) {
+        return productRepository.findBySku(sku).get();
     }
 }
