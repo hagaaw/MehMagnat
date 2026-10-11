@@ -1,7 +1,7 @@
-package com.example.application.service;
+package com.example.application.service.product;
 
 import com.example.application.entity.forProduct.ColorEntity;
-import com.example.application.repository.ColorRepository;
+import com.example.application.repository.product.ColorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

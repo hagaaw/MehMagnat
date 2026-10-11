@@ -2,7 +2,7 @@ package com.example.application.controller;
 
 
 import com.example.application.entity.forProduct.FurTypeEntity;
-import com.example.application.service.FurTypeService;
+import com.example.application.service.product.FurTypeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

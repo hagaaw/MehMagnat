@@ -1,8 +1,8 @@
-package com.example.application.service;
+package com.example.application.service.product;
 
 
 import com.example.application.entity.forProduct.SizeEntity;
-import com.example.application.repository.SizeRepository;
+import com.example.application.repository.product.SizeRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
