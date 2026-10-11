@@ -9,6 +9,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Random;
 
 @Entity
 @Table(name="products")
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 public class ProductEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="id")
@@ -57,10 +59,22 @@ public class ProductEntity {
     @JoinColumn(name="size_id")
     private SizeEntity size;
 
-    public ProductEntity(String sku, String title,
+    public ProductEntity( String title,
                          BigDecimal listPrice, int quantityOnHand,
                          int quantityReserved, LocalDateTime createdAt,
                          Status status) {
+        this.title = title;
+        this.listPrice = listPrice;
+        this.quantityOnHand = quantityOnHand;
+        this.quantityReserved = quantityReserved;
+        this.createdAt = createdAt;
+        this.status = status;
+    }
+
+    public ProductEntity( String sku,String title,
+                          BigDecimal listPrice, int quantityOnHand,
+                          int quantityReserved, LocalDateTime createdAt,
+                          Status status) {
         this.sku = sku;
         this.title = title;
         this.listPrice = listPrice;
@@ -69,6 +83,7 @@ public class ProductEntity {
         this.createdAt = createdAt;
         this.status = status;
     }
+
 
 
 }
