@@ -33,7 +33,7 @@ public class ReservationItemEntity {
     @JoinColumn(name="reservation_id", nullable = false)
     private ReservationEntity reservation;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name="product_id", nullable = false)
     private ProductEntity product;
 
