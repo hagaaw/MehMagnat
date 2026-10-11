@@ -46,17 +46,17 @@ public class ProductEntity {
     private LocalDateTime createdAt;
 
     @ManyToOne
-    @JoinColumn(name="fur_type_id")
+    @JoinColumn(name="fur_type_id", nullable = false)
     private FurTypeEntity furType;
 
 
     @ManyToOne
-    @JoinColumn(name="color_id")
+    @JoinColumn(name="color_id", nullable = false)
     private ColorEntity color;
 
 
     @ManyToOne
-    @JoinColumn(name="size_id")
+    @JoinColumn(name="size_id", nullable = false)
     private SizeEntity size;
 
     public ProductEntity( String title,
