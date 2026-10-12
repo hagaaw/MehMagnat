@@ -19,7 +19,7 @@ public class ScheduledTasks {
         this.reservationService = reservationService;
     }
 
-    @Scheduled(cron = "@daily")
+    @Scheduled(cron = "@midnight")
     public void checkReservationAndReplaceStatus(){
         reservationService.checkAllReservationAndReplaceStatus(LocalDate.now(), ReservationStatus.ACTUAL,ReservationStatus.INVALID);
     }
