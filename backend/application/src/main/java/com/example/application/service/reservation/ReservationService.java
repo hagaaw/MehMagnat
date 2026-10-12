@@ -73,7 +73,6 @@ public class ReservationService {
     }
 
     public Boolean madeReservation(ListProductsAndCostumerDto listProductsAndCostumerDto) {
-        int count = 0;
         var customer = customerService.saveDB(listProductsAndCostumerDto.getCustomer());
 
         ReservationEntity reservation = getNewReservation(customer,
@@ -82,12 +81,9 @@ public class ReservationService {
 
         for(var dtoProduct: listProductsAndCostumerDto.getSkuAndCount()){
             ProductEntity product = productService.findBySku(dtoProduct.getSku());
-            if (product == null){
-                continue;
-            }
             if (productService.findBySku(dtoProduct.getSku()).getQuantityReserved()
                     < dtoProduct.getCount()){
-                continue;
+                throw new IllegalArgumentException();
             }
             Integer countBusy = reservationItemService.checkOnValid(dtoProduct.getSku(),
                     listProductsAndCostumerDto.getStartAt(),
@@ -108,14 +104,16 @@ public class ReservationService {
                         product
                 );
                 reservationItemService.save(reservationItemEntity);
-                count++;
+            }else {
+                reservationRepository.delete(reservation);
+                return false;
             }
         }
-        if (count != 0){
-            reservation.setStatus(ReservationStatus.ACTUAL);
-            return true;
-        }
-        return false;
+
+        reservation.setStatus(ReservationStatus.ACTUAL);
+        return true;
+
+
     }
 
     public void checkAllReservationAndReplaceStatus(LocalDate now, ReservationStatus oldStatus,ReservationStatus newStatus) {
