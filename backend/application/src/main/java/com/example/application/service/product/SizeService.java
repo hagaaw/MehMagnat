@@ -4,10 +4,12 @@ package com.example.application.service.product;
 import com.example.application.entity.forProduct.SizeEntity;
 import com.example.application.repository.product.SizeRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
 @Service
+@Transactional
 public class SizeService {
     private SizeRepository sizeRepository;
 

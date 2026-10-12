@@ -6,6 +6,7 @@ import com.example.application.entity.forReservation.ReservationEntity;
 import com.example.application.entity.forReservation.ReservationStatus;
 import com.example.application.repository.reservation.ReservationRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -14,6 +15,7 @@ import java.util.Optional;
 import static com.example.application.config.AppConfig.*;
 
 @Service
+@Transactional
 public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final ReservationItemService reservationItemService;
@@ -59,5 +61,9 @@ public class ReservationService {
             sb.append(CHARS.charAt(random.nextInt(CHARS.length())));
         }
         return sb.toString();
+    }
+
+    public void checkAllReservationAndReplaceStatus(LocalDate now, ReservationStatus oldStatus,ReservationStatus newStatus) {
+        reservationRepository.replaceReservationStatusIfInvalid(now,oldStatus ,newStatus);
     }
 }

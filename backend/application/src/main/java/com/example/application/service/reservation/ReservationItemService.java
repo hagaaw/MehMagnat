@@ -3,10 +3,12 @@ package com.example.application.service.reservation;
 import com.example.application.entity.forReservation.ReservationItemEntity;
 import com.example.application.repository.reservation.ReservationItemRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 
 @Service
+@Transactional
 public class ReservationItemService {
     private final ReservationItemRepository reservationItemRepository;
 
