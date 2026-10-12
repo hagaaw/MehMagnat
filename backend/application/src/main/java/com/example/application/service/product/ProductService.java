@@ -70,6 +70,8 @@ public class ProductService {
     }
 
     public ProductEntity findBySku(String sku) {
-        return productRepository.findBySku(sku).get();
+        return productRepository.findBySku(sku)
+                .orElseThrow(() -> new IllegalArgumentException("Товар не найден: " + sku));
+
     }
 }

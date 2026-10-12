@@ -21,13 +21,11 @@ public class CustomerService {
 
 
     private final CustomerRepository customerRepository;
-    private final ReservationService reservationService;
     private final ProductService productService;
     private final ReservationItemService reservationItemService;
 
-    public CustomerService(CustomerRepository customerRepository, ReservationService reservationService, ProductService productService, ReservationItemService reservationItemService) {
+    public CustomerService(CustomerRepository customerRepository,ProductService productService, ReservationItemService reservationItemService) {
         this.customerRepository = customerRepository;
-        this.reservationService = reservationService;
         this.productService = productService;
         this.reservationItemService = reservationItemService;
     }
@@ -41,46 +39,5 @@ public class CustomerService {
         return searchCustomer.get();
     }
 
-    public Boolean madeReservation(ListProductsAndCostumerDto listProductsAndCostumerDto) {
-        int count = 0;
-        var customer = saveDB(listProductsAndCostumerDto.getCustomer());
 
-        ReservationEntity reservation = reservationService.getNewReservation(customer,
-                listProductsAndCostumerDto.getStartAt(),
-                listProductsAndCostumerDto.getEndAt());
-
-        for(var dtoProduct: listProductsAndCostumerDto.getSkuAndCount()){
-            ProductEntity product = productService.findBySku(dtoProduct.getSku());
-            if (productService.findBySku(dtoProduct.getSku()).getQuantityReserved()
-                    < dtoProduct.getCount()){
-                continue;
-            }
-            Integer countBusy = reservationItemService.checkOnValid(dtoProduct.getSku(),
-                    listProductsAndCostumerDto.getStartAt(),
-                    listProductsAndCostumerDto.getEndAt());
-
-            if ( countBusy == null){
-                countBusy = 0;
-            }
-
-
-            if (-countBusy + product.getQuantityReserved() >= dtoProduct.getCount()){
-
-                ReservationItemEntity reservationItemEntity = new ReservationItemEntity(
-                        dtoProduct.getCount(),
-                        product.getListPrice(),
-                        0d,
-                        reservation,
-                        product
-                );
-                reservationItemService.save(reservationItemEntity);
-                count++;
-            }
-        }
-        if (count != 0){
-            reservation.setStatus(ReservationStatus.ACTUAL);
-            return true;
-        }
-        return false;
-    }
 }
