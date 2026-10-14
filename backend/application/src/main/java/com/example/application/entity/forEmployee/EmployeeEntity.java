@@ -38,6 +38,9 @@ public class EmployeeEntity {
     @Column(name="created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(name="password", nullable = false)
+    private String password;
+
     public EmployeeEntity(String fullName, String phone,
                           String email,
                           EmployeeRole role,
