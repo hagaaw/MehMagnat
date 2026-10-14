@@ -21,7 +21,7 @@ public class FurTypeController {
         this.furTypeService = furTypeService;
     }
 
-    @GetMapping("/all")
+    @GetMapping("/get")
     public ResponseEntity<List<FurTypeEntity>> getAllFurTypes(){
         return ResponseEntity.ok(furTypeService.getAllFurTypes());
     }
