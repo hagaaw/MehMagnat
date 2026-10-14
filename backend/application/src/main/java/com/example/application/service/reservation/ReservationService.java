@@ -59,18 +59,12 @@ public class ReservationService {
     private String generatedUniqueNum() {
         String reservationNum;
         do {
-            reservationNum = generateRandomString();
+            reservationNum = generateRandomString(len);
         } while (reservationRepository.existsByReservationNum(reservationNum));
         return reservationNum;
     }
 
-    private String generateRandomString() {
-        StringBuilder sb = new StringBuilder(len);
-        for (int i = 0; i < len; i++) {
-            sb.append(CHARS.charAt(random.nextInt(CHARS.length())));
-        }
-        return sb.toString();
-    }
+
 
     public Boolean madeReservation(ListProductsAndCostumerDto listProductsAndCostumerDto) {
         var customer = customerService.saveDB(listProductsAndCostumerDto.getCustomer());

@@ -60,6 +60,7 @@ public class ProductService {
         }else{
             product.setColor(color.get());
         }
+        product.setSku(generatedUniqueSku());
         productRepository.save(product);
     }
 
@@ -74,4 +75,14 @@ public class ProductService {
                 .orElseThrow(() -> new IllegalArgumentException("Товар не найден: " + sku));
 
     }
+
+    private String generatedUniqueSku() {
+        String sku;
+        do {
+            sku = generateRandomString(len);
+        } while (productRepository.existsBySku(sku));
+        return sku;
+    }
+
+
 }
