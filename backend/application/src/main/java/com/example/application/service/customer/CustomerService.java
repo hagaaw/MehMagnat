@@ -40,4 +40,7 @@ public class CustomerService {
     }
 
 
+    public CustomerEntity findById(Long customerId) {
+        return customerRepository.findById(customerId).orElseThrow(() -> new IllegalArgumentException("такого покупателя нет"));
+    }
 }

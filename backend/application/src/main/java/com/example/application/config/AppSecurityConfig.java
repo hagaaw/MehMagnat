@@ -29,6 +29,7 @@ public class AppSecurityConfig {
                         .requestMatchers("/api/fur-type/**").hasAnyRole(EmployeeRole.ADMIN.name(), EmployeeRole.SALER.name())
                         .requestMatchers("/api/reservation/**").hasAnyRole(EmployeeRole.ADMIN.name(), EmployeeRole.SALER.name())
                         .requestMatchers("/api/registration/**").hasRole(EmployeeRole.ADMIN.name())
+                        .requestMatchers("/api/sale/**").hasAnyRole(EmployeeRole.ADMIN.name(), EmployeeRole.SALER.name())
                         .anyRequest().permitAll())
                 .formLogin(login -> login
                         .loginProcessingUrl("/login")

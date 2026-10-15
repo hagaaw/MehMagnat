@@ -47,13 +47,27 @@ public class SaleEntity {
     @Column(name="total_amount", nullable = false)
     private BigDecimal totalAmount;
 
-    @Column(name="discount_total", nullable = false)
-    private Double discountTotal;
-
     @Column(name="created_at", nullable = false)
     private LocalDateTime createdAt;
 
     @Column(name="paid_at")
     private LocalDateTime paidAt;
 
+    public SaleEntity(String saleNum,
+                      CustomerEntity customer,
+                      EmployeeEntity employee,
+                      SaleStatus status,
+                      ReservationEntity reservation,
+                      BigDecimal totalAmount,
+                      LocalDateTime paidAt,
+                      LocalDateTime createdAt) {
+        this.saleNum = saleNum;
+        this.customer = customer;
+        this.employee = employee;
+        this.status = status;
+        this.reservation = reservation;
+        this.totalAmount = totalAmount;
+        this.paidAt = paidAt;
+        this.createdAt = createdAt;
+    }
 }

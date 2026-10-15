@@ -10,6 +10,8 @@ import com.example.application.entity.forReservation.ReservationStatus;
 import com.example.application.repository.reservation.ReservationRepository;
 import com.example.application.service.customer.CustomerService;
 import com.example.application.service.product.ProductService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +28,7 @@ public class ReservationService {
     private final ReservationItemService reservationItemService;
     private final ProductService productService;
     private final CustomerService customerService;
+    private final Logger logger = LoggerFactory.getLogger(ReservationService.class);
 
     public ReservationService(ReservationRepository reservationRepository, ReservationItemService reservationItemService, ProductService productService, CustomerService customerService) {
         this.reservationRepository = reservationRepository;
@@ -34,7 +37,7 @@ public class ReservationService {
         this.customerService = customerService;
     }
 
-    public ReservationEntity getNewReservation(CustomerEntity customer, LocalDate startAt, LocalDate endAt) {
+    public ReservationEntity getNewReservationAndSave(CustomerEntity customer, LocalDate startAt, LocalDate endAt) {
 
         var reservation = new ReservationEntity(
                 generatedUniqueNum(),
@@ -47,9 +50,6 @@ public class ReservationService {
         );
 
         reservationRepository.save(reservation);
-
-
-
         return reservation;
 
 
@@ -66,10 +66,10 @@ public class ReservationService {
 
 
 
-    public Boolean madeReservation(ListProductsAndCostumerDto listProductsAndCostumerDto) {
+    public Optional<String> madeReservation(ListProductsAndCostumerDto listProductsAndCostumerDto) {
         var customer = customerService.saveDB(listProductsAndCostumerDto.getCustomer());
 
-        ReservationEntity reservation = getNewReservation(customer,
+        ReservationEntity reservation = getNewReservationAndSave(customer,
                 listProductsAndCostumerDto.getStartAt(),
                 listProductsAndCostumerDto.getEndAt());
 
@@ -79,7 +79,7 @@ public class ReservationService {
                     < dtoProduct.getCount()){
                 throw new IllegalArgumentException();
             }
-            Integer countBusy = reservationItemService.checkOnValid(dtoProduct.getSku(),
+            Integer countBusy = reservationItemService.checkBusyInDate(dtoProduct.getSku(),
                     listProductsAndCostumerDto.getStartAt(),
                     listProductsAndCostumerDto.getEndAt());
 
@@ -87,8 +87,9 @@ public class ReservationService {
                 countBusy = 0;
             }
 
+            int countFreeProducts = product.getQuantityReserved() - reservationItemService.checkBusy(dtoProduct.getSku());
 
-            if (-countBusy + product.getQuantityReserved() >= dtoProduct.getCount()){
+            if (-countBusy + countFreeProducts >= dtoProduct.getCount()){
 
                 ReservationItemEntity reservationItemEntity = new ReservationItemEntity(
                         dtoProduct.getCount(),
@@ -99,18 +100,24 @@ public class ReservationService {
                 );
                 reservationItemService.save(reservationItemEntity);
             }else {
+                logger.info("бляяяя");
                 reservationRepository.delete(reservation);
-                return false;
+                reservationItemService.deleteAllByReservation(reservation);
+                return Optional.empty();
             }
         }
 
         reservation.setStatus(ReservationStatus.ACTUAL);
-        return true;
+        return Optional.of(reservation.getReservationNum());
 
 
     }
 
     public void checkAllReservationAndReplaceStatus(LocalDate now, ReservationStatus oldStatus,ReservationStatus newStatus) {
         reservationRepository.replaceReservationStatusIfInvalid(now,oldStatus ,newStatus);
+    }
+
+    public ReservationEntity findByReservationNum(String reservationNum) {
+        return reservationRepository.findByReservationNum(reservationNum).orElseThrow(() -> new IllegalArgumentException("Такой брони нет"));
     }
 }

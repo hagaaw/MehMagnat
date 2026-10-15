@@ -10,4 +10,6 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
     boolean existsBySku(String sku);
 
     Optional<ProductEntity> findBySku(String sku);
+
+    void deleteBySku(String sku);
 }
