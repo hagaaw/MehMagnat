@@ -38,6 +38,13 @@ public class ProductService {
         this.furTypeService = furTypeService;
     }
 
+    public void deleteBySku(String sku){
+        productRepository.deleteBySku(sku);
+    }
+
+    public void saveNotNew(ProductEntity product){
+        productRepository.save(product);
+    }
 
     public void saveToDB(ProductEntity product){
         Optional<SizeEntity> size = sizeService.findBySize(product.getSize());

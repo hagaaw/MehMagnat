@@ -5,10 +5,7 @@ import com.example.application.service.customer.CustomerService;
 import com.example.application.service.reservation.ReservationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 
 @RestController
@@ -24,15 +21,13 @@ public class ReservationController {
     }
 
     @PostMapping("/made_reservation")
-    public ResponseEntity<?> madeReservation(
+    public ResponseEntity<String> madeReservation(
             @RequestBody ListProductsAndCostumerDto listProductsAndCostumerDto
     ){
 
-        Boolean isCreate = reservationService.madeReservation(listProductsAndCostumerDto);
-        if (isCreate){
-            return ResponseEntity.ok(isCreate);
-        }
-        return ResponseEntity.status(400).body(isCreate);
+        String reservationNum = reservationService.madeReservation(listProductsAndCostumerDto).orElseThrow(() -> new IllegalArgumentException("Бронь не найдена"));
+        return ResponseEntity.ok(reservationNum);
 
     }
+
 }

@@ -27,7 +27,7 @@ public class SaleItemEntity {
 
 
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name="sale_id",nullable = false)
     private SaleEntity sale;
 
@@ -47,8 +47,15 @@ public class SaleItemEntity {
     private Double discountAmount; //скидка за единицу
 
     @Column(name = "final_unit_price", nullable = false)
-    private Double finalUnitPrice; //цена за единицу с учетом скидки
+    private BigDecimal finalUnitPrice; //цена за единицу с учетом скидки
 
 
-
+    public SaleItemEntity(SaleEntity sale, ProductEntity product, Integer quantity, BigDecimal unitPrice, Double discountAmount, BigDecimal finalUnitPrice) {
+        this.sale = sale;
+        this.product = product;
+        this.quantity = quantity;
+        this.unitPrice = unitPrice;
+        this.discountAmount = discountAmount;
+        this.finalUnitPrice = finalUnitPrice;
+    }
 }

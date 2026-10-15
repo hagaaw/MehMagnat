@@ -26,4 +26,12 @@ public class EmployeeService {
         employeeRepository.save(employee);
         return true;
     }
+
+    public EmployeeEntity findByPhone(String phone){
+        return employeeRepository.findByPhone(phone).orElseThrow(() -> new IllegalArgumentException("Такого сотрудника нет"));
+    }
+
+    public EmployeeEntity findByEmployeeId(Long salleId) {
+        return employeeRepository.findById(salleId).orElseThrow(()-> new IllegalArgumentException("Такого продовца нет"));
+    }
 }
