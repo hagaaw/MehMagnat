@@ -3,6 +3,7 @@ package com.example.application.config;
 
 import com.example.application.entity.forEmployee.EmployeeRole;
 import com.example.application.repository.employee.EmployeeRepository;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -22,7 +23,7 @@ public class AppSecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http){
         return http
-                .csrf(CsrfConfigurer::spa)
+                .csrf(CsrfConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/products/**").hasAnyRole(EmployeeRole.ADMIN.name(), EmployeeRole.SALER.name())
                         .requestMatchers("/api/fur-type/**").hasAnyRole(EmployeeRole.ADMIN.name(), EmployeeRole.SALER.name())
@@ -33,11 +34,14 @@ public class AppSecurityConfig {
                         .loginProcessingUrl("/login")
                         .usernameParameter("phone")
                         .passwordParameter("password")
+                        .successHandler((request, response, authentication) -> response.setStatus(HttpServletResponse.SC_OK))
+                        .failureHandler(((request, response, exception) -> response.setStatus(HttpServletResponse.SC_UNAUTHORIZED)))
                         .permitAll())
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/login")
-                        .permitAll())
+                        .permitAll()
+                        .logoutSuccessHandler((request, response, authentication) -> response.setStatus(HttpServletResponse.SC_OK)))
                 .build();
     }
     @Bean
