@@ -92,9 +92,7 @@ public class SaleService {
             productService.saveNotNew(product);
             saleItemService.save(saleItem);
             count++;
-            if (product.getQuantityReserved() == 0){
-                productService.deleteBySku(product.getSku());
-            }
+
         }
 
         if (count == 0){
