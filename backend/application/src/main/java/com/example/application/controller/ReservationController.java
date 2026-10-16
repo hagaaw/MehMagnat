@@ -1,6 +1,8 @@
 package com.example.application.controller;
 
 import com.example.application.dto.ListProductsAndCostumerDto;
+import com.example.application.entity.forReservation.ReservationEntity;
+import com.example.application.entity.forReservation.ReservationStatus;
 import com.example.application.service.customer.CustomerService;
 import com.example.application.service.reservation.ReservationService;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +29,16 @@ public class ReservationController {
 
         String reservationNum = reservationService.madeReservation(listProductsAndCostumerDto).orElseThrow(() -> new IllegalArgumentException("Бронь не найдена"));
         return ResponseEntity.ok(reservationNum);
+
+    }
+
+    @PostMapping("/set_status_reservation")
+    public ResponseEntity<ReservationEntity> setStatusReservation(
+            @RequestParam String reservationNum,
+            @RequestParam ReservationStatus status){
+        ReservationEntity reservation = reservationService.setStatusReservation(reservationNum, status);
+
+        return ResponseEntity.ok(reservation);
 
     }
 

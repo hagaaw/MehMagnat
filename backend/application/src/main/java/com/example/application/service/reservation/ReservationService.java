@@ -100,7 +100,7 @@ public class ReservationService {
                 );
                 reservationItemService.save(reservationItemEntity);
             }else {
-                logger.info("бляяяя");
+
                 reservationRepository.delete(reservation);
                 reservationItemService.deleteAllByReservation(reservation);
                 return Optional.empty();
@@ -119,5 +119,12 @@ public class ReservationService {
 
     public ReservationEntity findByReservationNum(String reservationNum) {
         return reservationRepository.findByReservationNum(reservationNum).orElseThrow(() -> new IllegalArgumentException("Такой брони нет"));
+    }
+
+    public ReservationEntity setStatusReservation(String reservationNum, ReservationStatus status) {
+        var reservation = reservationRepository.findByReservationNum(reservationNum).orElseThrow(()-> new IllegalArgumentException("Такой брони нет"));
+        reservation.setStatus(status);
+        reservationRepository.save(reservation);
+        return reservation;
     }
 }
