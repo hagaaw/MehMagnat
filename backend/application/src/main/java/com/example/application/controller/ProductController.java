@@ -37,4 +37,8 @@ public class ProductController {
         return ResponseEntity.ok(product);
     }
 
+    @GetMapping("/get_all")
+    public ResponseEntity<List<ProductEntity>> getAllProducts(){
+        return ResponseEntity.ok(productService.getAll());
+    }
 }

@@ -42,6 +42,8 @@ public class SaleController {
 
         SaleEntity sale = saleService.sale(reservationNum, phoneEmployee);
 
+        if (sale == null) return ResponseEntity.status(400).body(null);
+
         return ResponseEntity.ok(sale);
     }
 }
