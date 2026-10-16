@@ -23,7 +23,7 @@ public class AppSecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http){
         return http
-                .csrf(CsrfConfigurer::disable)
+                .csrf(CsrfConfigurer::spa)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/products/**").hasAnyRole(EmployeeRole.ADMIN.name(), EmployeeRole.SALER.name())
                         .requestMatchers("/api/fur-type/**").hasAnyRole(EmployeeRole.ADMIN.name(), EmployeeRole.SALER.name())
