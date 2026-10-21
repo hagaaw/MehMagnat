@@ -31,7 +31,7 @@ services:
         condition: service_healthy
     networks: [backend]
     restart: unless-stopped
-    # порт 8080 наружу НЕ открываем — доступ только через nginx
+
 
   nginx:
     image: nginx:1.27-alpine

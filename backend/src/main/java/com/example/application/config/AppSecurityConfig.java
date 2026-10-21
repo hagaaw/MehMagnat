@@ -25,6 +25,7 @@ public class AppSecurityConfig {
         return http
                 .csrf(CsrfConfigurer::spa)
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/products/get_all").permitAll()
                         .requestMatchers("/api/products/**").hasAnyRole(EmployeeRole.ADMIN.name(), EmployeeRole.SALER.name())
                         .requestMatchers("/api/fur-type/**").hasAnyRole(EmployeeRole.ADMIN.name(), EmployeeRole.SALER.name())
                         .requestMatchers("/api/registration/**").hasRole(EmployeeRole.ADMIN.name())
