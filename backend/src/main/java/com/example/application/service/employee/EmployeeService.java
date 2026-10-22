@@ -3,6 +3,7 @@ package com.example.application.service.employee;
 
 import com.example.application.entity.forEmployee.EmployeeEntity;
 import com.example.application.repository.employee.EmployeeRepository;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -33,5 +34,9 @@ public class EmployeeService {
 
     public EmployeeEntity findByEmployeeId(Long salleId) {
         return employeeRepository.findById(salleId).orElseThrow(()-> new IllegalArgumentException("Такого продовца нет"));
+    }
+
+    public EmployeeEntity getMe() {
+        return employeeRepository.findByPhone(SecurityContextHolder.getContext().getAuthentication().getName()).orElse(null);
     }
 }
