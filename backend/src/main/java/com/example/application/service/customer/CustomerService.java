@@ -43,4 +43,8 @@ public class CustomerService {
     public CustomerEntity findById(Long customerId) {
         return customerRepository.findById(customerId).orElseThrow(() -> new IllegalArgumentException("такого покупателя нет"));
     }
+
+    public CustomerEntity findByPhone(String phone) {
+        return customerRepository.findByPhone(phone).orElseThrow(()->new IllegalArgumentException("у этого человека нет брони"));
+    }
 }

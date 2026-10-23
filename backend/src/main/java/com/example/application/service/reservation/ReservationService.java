@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static com.example.application.config.AppConfig.*;
@@ -126,5 +127,11 @@ public class ReservationService {
         reservation.setStatus(status);
         reservationRepository.save(reservation);
         return reservation;
+    }
+
+    public List<ReservationEntity> findByPhone(String phone) {
+        CustomerEntity customer = customerService.findByPhone(phone);
+
+        return reservationRepository.findAllByCustomer(customer);
     }
 }

@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 
 @RestController
 @RequestMapping("/api/reservation")
@@ -40,6 +42,24 @@ public class ReservationController {
 
         return ResponseEntity.ok(reservation);
 
+    }
+
+    @GetMapping("/get")
+    public ResponseEntity<ReservationEntity> getReservationByReservationNum(
+            @RequestParam String reservationNum
+    ){
+        ReservationEntity reservation = reservationService.findByReservationNum(reservationNum);
+
+        return ResponseEntity.ok(reservation);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<ReservationEntity>> getReservationByPhone(
+            @RequestParam String phone
+    ){
+        List<ReservationEntity> reservations = reservationService.findByPhone(phone);
+
+        return ResponseEntity.ok(reservations);
     }
 
 }

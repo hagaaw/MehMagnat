@@ -1,5 +1,6 @@
 package com.example.application.repository.reservation;
 
+import com.example.application.entity.forCustomer.CustomerEntity;
 import com.example.application.entity.forReservation.ReservationEntity;
 import com.example.application.entity.forReservation.ReservationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -25,5 +26,6 @@ public interface ReservationRepository extends JpaRepository<ReservationEntity, 
 
     Optional<ReservationEntity> findByReservationNum(String reservationNum);
 
-    List<ReservationEntity> reservationNum(String reservationNum);
+
+    List<ReservationEntity> findAllByCustomer(CustomerEntity customer);
 }
