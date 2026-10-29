@@ -5,13 +5,14 @@ import com.example.application.entity.forReservation.ReservationEntity;
 import com.example.application.entity.forReservation.ReservationStatus;
 import com.example.application.service.customer.CustomerService;
 import com.example.application.service.reservation.ReservationService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-
+@Tag(name="reservations")
 @RestController
 @RequestMapping("/api/reservation")
 @Transactional
