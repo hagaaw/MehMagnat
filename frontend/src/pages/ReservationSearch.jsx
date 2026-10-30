@@ -1,10 +1,25 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { addSale, getReservation, searchReservationsByPhone, setReservationStatus } from "../api";
+import {
+  addSale,
+  getReservation,
+  getReservationItems,
+  searchReservationsByPhone,
+  setReservationStatus,
+} from "../api";
 import { useAuth } from "../auth";
-import { formatDate, isValidPhone, normalizePhone } from "../utils";
+import { formatDate, formatPrice, isValidPhone, normalizePhone } from "../utils";
 
 const STATUS_LABEL = { ACTUAL: "Активна", INVALID: "Недействительна" };
+
+// Добавляет к брони список товаров. Если не получилось - показываем бронь без товаров.
+async function withItems(reservation) {
+  try {
+    return { ...reservation, items: await getReservationItems(reservation.reservationNum) };
+  } catch {
+    return reservation;
+  }
+}
 
 // ------------------------------------------------------------------ карточка брони
 
@@ -72,22 +87,39 @@ function ReservationCard({ reservation: r, staff, onUpdate }) {
         {r.comment && (<><dt>Комментарий</dt><dd>{r.comment}</dd></>)}
       </dl>
 
-      {/* Бэкенд пока не отдаёт товары брони; когда добавит поле items - таблица появится сама */}
       {Array.isArray(r.items) && r.items.length > 0 && (
         <div className="table-wrap">
           <table className="table">
             <thead>
-              <tr><th>Артикул</th><th>Товар</th><th>Кол-во</th></tr>
+              <tr>
+                <th>Артикул</th>
+                <th>Товар</th>
+                <th>Кол-во</th>
+                <th>Цена</th>
+                <th>Сумма</th>
+              </tr>
             </thead>
             <tbody>
               {r.items.map((it) => (
-                <tr key={it.sku}>
+                <tr key={it.id ?? it.sku}>
                   <td>{it.sku}</td>
                   <td>{it.title || "—"}</td>
                   <td>{it.count}</td>
+                  <td>{it.price != null ? formatPrice(it.price) : "—"}</td>
+                  <td>{it.price != null ? formatPrice(it.price * it.count) : "—"}</td>
                 </tr>
               ))}
             </tbody>
+            <tfoot>
+              <tr>
+                <td colSpan={4}><strong>Итого</strong></td>
+                <td>
+                  <strong>
+                    {formatPrice(r.items.reduce((sum, it) => sum + (Number(it.price) || 0) * (Number(it.count) || 0), 0))}
+                  </strong>
+                </td>
+              </tr>
+            </tfoot>
           </table>
         </div>
       )}
@@ -155,11 +187,11 @@ export default function ReservationSearch() {
     try {
       if (searchMode === "num") {
         const num = v.replace(/\s+/g, "").toUpperCase();
-        setResults([await getReservation(num)]);
+        setResults([await withItems(await getReservation(num))]);
         setParams({ num }, { replace: true }); // ссылку на найденную бронь можно сохранить
       } else {
         const list = await searchReservationsByPhone(normalizePhone(v));
-        setResults(Array.isArray(list) ? list : []);
+        setResults(Array.isArray(list) ? await Promise.all(list.map(withItems)) : []);
       }
     } catch (err) {
       // Бэкенд на «не найдено» отвечает 500 без текста, поэтому трактуем 500 и 404 как «нет такой брони»

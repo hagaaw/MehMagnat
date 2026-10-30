@@ -27,11 +27,10 @@ function Header() {
 
         <nav className="main-nav" aria-label="Основное меню">
           <NavLink to="/products/catalog" className={navClass}>Каталог</NavLink>
+          {/* Поиск брони доступен всем: покупатель - по номеру, сотрудник - ещё и по телефону */}
+          <NavLink to="/reservations/search" className={navClass}>Поиск брони</NavLink>
           {isStaff && (
-            <>
-              <NavLink to="/reservations/search" className={navClass}>Поиск брони</NavLink>
-              <NavLink to="/products/new" className={navClass}>Добавить товар</NavLink>
-            </>
+            <NavLink to="/products/new" className={navClass}>Добавить товар</NavLink>
           )}
           {isStaff && isAdmin && (
             <NavLink to="/employees" className={navClass}>Сотрудники</NavLink>
@@ -79,13 +78,10 @@ export default function App() {
 
           {/* Открыто для всех */}
           <Route path="/products/catalog" element={<Catalog />} />
+          <Route path="/reservations/search" element={<ReservationSearch />} />
           <Route path="/signin" element={<Login />} />
 
           {/* Только сотрудники */}
-          <Route
-            path="/reservations/search"
-            element={<RequireStaff><ReservationSearch /></RequireStaff>}
-          />
           <Route
             path="/products/new"
             element={<RequireStaff><ProductForm /></RequireStaff>}

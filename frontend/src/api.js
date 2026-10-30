@@ -176,7 +176,7 @@ export async function logout() {
 
 /**
  * Кто сейчас вошёл. Возвращает { id, fullName, role } или null, если не вошёл.
- * [НУЖЕН БЭК] GET /api/me. Пока его нет, проверяем сессию через /api/products
+ * GET /api/me (есть в ProfileController). Если вдруг не ответит, проверяем сессию через /api/products
  * (он доступен только сотрудникам) - тогда роль неизвестна (role: null).
  */
 export async function getMe() {
@@ -280,7 +280,7 @@ export function setReservationStatus(reservationNum, status) {
   });
 }
 
-/** [НУЖЕН БЭК] GET /api/reservation/get?reservationNum=... */
+/** Бронь по номеру: GET /api/reservation/get?reservationNum=... */
 export function getReservation(reservationNum) {
   return request("/api/reservation/get", {
     query: { reservationNum },
@@ -288,9 +288,25 @@ export function getReservation(reservationNum) {
   });
 }
 
-/** [НУЖЕН БЭК] GET /api/reservation/search?phone=... */
+/** Брони покупателя по телефону: GET /api/reservation/search?phone=... */
 export function searchReservationsByPhone(phone) {
   return request("/api/reservation/search", { query: { phone } });
+}
+
+/**
+ * Товары брони: GET /api/reservation_item?reservationNum=...
+ * Бэкенд отдаёт позиции целиком (ReservationItemEntity), приводим их к простому виду:
+ * { id, sku, title, count, price }.
+ */
+export async function getReservationItems(reservationNum) {
+  const list = await request("/api/reservation_item", { query: { reservationNum } });
+  return (Array.isArray(list) ? list : []).map((it) => ({
+    id: it.id,
+    sku: it.product?.sku ?? it.sku,
+    title: it.product?.title ?? it.title,
+    count: it.quantity ?? it.count,
+    price: it.unitPrice ?? it.price,
+  }));
 }
 
 // ---------------------------------------------------------------- продажи и сотрудники
