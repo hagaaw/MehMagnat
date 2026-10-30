@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { addSale, getReservation, searchReservationsByPhone, setReservationStatus } from "../api";
+import { useAuth } from "../auth";
 import { formatDate, isValidPhone, normalizePhone } from "../utils";
 
 const STATUS_LABEL = { ACTUAL: "Активна", INVALID: "Недействительна" };
 
 // ------------------------------------------------------------------ карточка брони
 
-function ReservationCard({ reservation, onUpdate }) {
-  const r = reservation;
+// staff = true  -> видны кнопки «Оформить продажу» и «Отменить бронь»
+// staff = false -> покупатель только смотрит бронь
+function ReservationCard({ reservation: r, staff, onUpdate }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -34,8 +37,7 @@ function ReservationCard({ reservation, onUpdate }) {
     if (!window.confirm(text)) return;
     run(async () => {
       const updated = await setReservationStatus(r.reservationNum, status);
-      // Ответ не содержит позиций брони - сохраняем их из текущей карточки
-      onUpdate({ ...r, ...updated, unknown: false });
+      onUpdate({ ...r, ...updated });
       setMessage(status === "INVALID" ? "Бронь отменена." : "Бронь снова активна.");
     });
   };
@@ -49,36 +51,28 @@ function ReservationCard({ reservation, onUpdate }) {
     });
   };
 
-  const canSell = !sold && r.status !== "INVALID";
+  const badgeClass = r.status === "ACTUAL" ? "badge-free" : "badge-off";
 
   return (
     <article className="card stack">
       <div className="panel-head" style={{ marginBottom: 0 }}>
         <div>
-          <h2 style={{ letterSpacing: 1 }}>{r.reservationNum}</h2>
-          {r.status && (
-            <span className={"badge " + (r.status === "ACTUAL" ? "badge-free" : "badge-off")}>
-              {STATUS_LABEL[r.status] || r.status}
-            </span>
-          )}
+          <div className="muted">Номер брони</div>
+          <h2 style={{ letterSpacing: 1, userSelect: "all" }}>{r.reservationNum}</h2>
+          {r.status && <span className={"badge " + badgeClass}>{STATUS_LABEL[r.status] || r.status}</span>}
         </div>
       </div>
 
-      {r.unknown ? (
-        <div className="alert alert-warn">
-          Данные брони получить не удалось (поиск брони на сервере пока недоступен). Действия ниже работают по номеру.
-        </div>
-      ) : (
-        <dl className="props">
-          <dt>Покупатель</dt><dd>{r.customer?.fullName || "—"}</dd>
-          <dt>Телефон</dt><dd>{r.customer?.phone || "—"}</dd>
-          <dt>Email</dt><dd>{r.customer?.email || "—"}</dd>
-          <dt>Период</dt><dd>{formatDate(r.startAt)} — {formatDate(r.endAt)}</dd>
-          <dt>Создана</dt><dd>{formatDate(r.createdAt)}</dd>
-          {r.comment && (<><dt>Комментарий</dt><dd>{r.comment}</dd></>)}
-        </dl>
-      )}
+      <dl className="props">
+        <dt>Период брони</dt><dd>{formatDate(r.startAt)} — {formatDate(r.endAt)}</dd>
+        <dt>Оформлена</dt><dd>{formatDate(r.createdAt)}</dd>
+        <dt>Покупатель</dt><dd>{r.customer?.fullName || "—"}</dd>
+        <dt>Телефон</dt><dd>{r.customer?.phone || "—"}</dd>
+        <dt>Email</dt><dd>{r.customer?.email || "—"}</dd>
+        {r.comment && (<><dt>Комментарий</dt><dd>{r.comment}</dd></>)}
+      </dl>
 
+      {/* Бэкенд пока не отдаёт товары брони; когда добавит поле items - таблица появится сама */}
       {Array.isArray(r.items) && r.items.length > 0 && (
         <div className="table-wrap">
           <table className="table">
@@ -98,26 +92,34 @@ function ReservationCard({ reservation, onUpdate }) {
         </div>
       )}
 
+      {r.status === "INVALID" && !staff && (
+        <div className="alert alert-warn" style={{ margin: 0 }}>
+          Эта бронь больше не действует. Если нужна помощь, свяжитесь с магазином.
+        </div>
+      )}
+
       {message && <div className="alert alert-success" style={{ margin: 0 }}>{message}</div>}
       {error && <div className="alert alert-error" role="alert" style={{ margin: 0 }}>{error}</div>}
 
-      <div className="actions">
-        {canSell && (
-          <button type="button" className="btn btn-primary" onClick={makeSale} disabled={busy}>
-            Оформить продажу
-          </button>
-        )}
-        {r.status !== "INVALID" && (
-          <button type="button" className="btn btn-danger" onClick={() => changeStatus("INVALID")} disabled={busy}>
-            Отменить бронь
-          </button>
-        )}
-        {r.status === "INVALID" && (
-          <button type="button" className="btn btn-secondary" onClick={() => changeStatus("ACTUAL")} disabled={busy}>
-            Вернуть в активные
-          </button>
-        )}
-      </div>
+      {staff && (
+        <div className="actions">
+          {!sold && r.status !== "INVALID" && (
+            <button type="button" className="btn btn-primary" onClick={makeSale} disabled={busy}>
+              Оформить продажу
+            </button>
+          )}
+          {r.status !== "INVALID" && (
+            <button type="button" className="btn btn-danger" onClick={() => changeStatus("INVALID")} disabled={busy}>
+              Отменить бронь
+            </button>
+          )}
+          {r.status === "INVALID" && (
+            <button type="button" className="btn btn-secondary" onClick={() => changeStatus("ACTUAL")} disabled={busy}>
+              Вернуть в активные
+            </button>
+          )}
+        </div>
+      )}
     </article>
   );
 }
@@ -125,92 +127,120 @@ function ReservationCard({ reservation, onUpdate }) {
 // ------------------------------------------------------------------ страница
 
 export default function ReservationSearch() {
-  const [mode, setMode] = useState("num"); // "num" | "phone"
-  const [value, setValue] = useState("");
+  const { isStaff } = useAuth();
+  const [params, setParams] = useSearchParams();
+  const initialNum = params.get("num") || "";
+
+  const [mode, setMode] = useState("num"); // "num" | "phone" (телефон - только сотрудникам)
+  const [value, setValue] = useState(initialNum);
   const [results, setResults] = useState(null); // null = ещё не искали
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [fallbackNum, setFallbackNum] = useState("");
 
-  function switchMode(next) {
-    setMode(next);
-    setValue("");
+  const runSearch = useCallback(async (searchMode, raw) => {
     setError("");
     setResults(null);
-    setFallbackNum("");
-  }
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setError("");
-    setFallbackNum("");
-    setResults(null);
-
-    const v = value.trim();
+    const v = raw.trim();
     if (!v) {
-      setError(mode === "num" ? "Введите номер брони." : "Введите телефон покупателя.");
+      setError(searchMode === "num" ? "Введите номер брони." : "Введите телефон покупателя.");
       return;
     }
-    if (mode === "phone" && !isValidPhone(v)) {
+    if (searchMode === "phone" && !isValidPhone(v)) {
       setError("Введите корректный телефон, например +7 900 123-45-67.");
       return;
     }
 
     setLoading(true);
     try {
-      if (mode === "num") {
-        const num = v.toUpperCase();
-        try {
-          setResults([await getReservation(num)]);
-        } catch (err) {
-          setError(err.message);
-          setFallbackNum(num); // позволим выполнить действия по номеру вслепую
-        }
+      if (searchMode === "num") {
+        const num = v.replace(/\s+/g, "").toUpperCase();
+        setResults([await getReservation(num)]);
+        setParams({ num }, { replace: true }); // ссылку на найденную бронь можно сохранить
       } else {
         const list = await searchReservationsByPhone(normalizePhone(v));
         setResults(Array.isArray(list) ? list : []);
       }
     } catch (err) {
-      setError(err.message || "Не удалось выполнить поиск.");
+      // Бэкенд на «не найдено» отвечает 500 без текста, поэтому трактуем 500 и 404 как «нет такой брони»
+      if (err.status === 500 || err.status === 404) {
+        setError(
+          searchMode === "num"
+            ? "Бронь с таким номером не найдена. Проверьте номер и попробуйте ещё раз."
+            : "Для этого телефона броней не найдено."
+        );
+      } else {
+        setError(err.message || "Не удалось выполнить поиск.");
+      }
     } finally {
       setLoading(false);
     }
+  }, [setParams]);
+
+  // Открыли по ссылке /reservations/search?num=... - сразу показываем бронь
+  const autoRan = useRef(false);
+  useEffect(() => {
+    if (initialNum && !autoRan.current) {
+      autoRan.current = true;
+      runSearch("num", initialNum);
+    }
+  }, [initialNum, runSearch]);
+
+  function switchMode(next) {
+    setMode(next);
+    setValue("");
+    setError("");
+    setResults(null);
   }
 
   const updateOne = (updated) =>
     setResults((list) => list.map((r) => (r.reservationNum === updated.reservationNum ? updated : r)));
 
+  const byNumber = mode === "num";
+
   return (
     <div className="container page page-wide">
       <nav className="breadcrumbs">Главная / Брони / Поиск</nav>
       <h1>Поиск брони</h1>
+      {!isStaff && (
+        <p className="muted">Введите номер брони, который вы получили при оформлении, и мы покажем её данные.</p>
+      )}
 
       <div className="card">
-        <div className="actions" style={{ marginBottom: 14 }}>
-          <button
-            type="button" className={"btn " + (mode === "num" ? "btn-primary" : "btn-secondary")}
-            onClick={() => switchMode("num")}
-          >
-            По номеру
-          </button>
-          <button
-            type="button" className={"btn " + (mode === "phone" ? "btn-primary" : "btn-secondary")}
-            onClick={() => switchMode("phone")}
-          >
-            По телефону
-          </button>
-        </div>
+        {isStaff && (
+          <div className="actions" style={{ marginBottom: 14 }}>
+            <button
+              type="button" className={"btn " + (byNumber ? "btn-primary" : "btn-secondary")}
+              onClick={() => switchMode("num")}
+            >
+              По номеру
+            </button>
+            <button
+              type="button" className={"btn " + (!byNumber ? "btn-primary" : "btn-secondary")}
+              onClick={() => switchMode("phone")}
+            >
+              По телефону
+            </button>
+          </div>
+        )}
 
-        <form onSubmit={handleSubmit} noValidate>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            runSearch(mode, value);
+          }}
+          noValidate
+        >
           <div className="form-field">
-            <label htmlFor="rs-value">{mode === "num" ? "Номер брони" : "Телефон покупателя"}</label>
+            <label htmlFor="rs-value">{byNumber ? "Номер брони" : "Телефон покупателя"}</label>
             <input
               id="rs-value"
-              type={mode === "num" ? "text" : "tel"}
-              placeholder={mode === "num" ? "K3J9X0Q2LZ81MWA" : "+7 900 123-45-67"}
+              type={byNumber ? "text" : "tel"}
+              placeholder={byNumber ? "K3J9X0Q2LZ81MWA" : "+7 900 123-45-67"}
               value={value}
               onChange={(e) => setValue(e.target.value)}
-              autoFocus
+              autoComplete="off"
+              autoFocus={!initialNum}
             />
           </div>
           <button type="submit" className="btn btn-primary" disabled={loading}>
@@ -220,30 +250,14 @@ export default function ReservationSearch() {
       </div>
 
       <div className="stack" style={{ marginTop: 16 }}>
-        {error && (
-          <div className="alert alert-error" role="alert">
-            {error}
-            {fallbackNum && (
-              <div style={{ marginTop: 8 }}>
-                <button
-                  type="button" className="btn btn-sm btn-secondary"
-                  onClick={() => {
-                    setError("");
-                    setResults([{ reservationNum: fallbackNum, status: null, unknown: true }]);
-                    setFallbackNum("");
-                  }}
-                >
-                  Всё равно работать с номером {fallbackNum}
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+        {error && <div className="alert alert-error" role="alert">{error}</div>}
 
         {results && results.length === 0 && <div className="empty-state">Броней не найдено.</div>}
 
         {results &&
-          results.map((r) => <ReservationCard key={r.reservationNum} reservation={r} onUpdate={updateOne} />)}
+          results.map((r) => (
+            <ReservationCard key={r.reservationNum} reservation={r} staff={isStaff} onUpdate={updateOne} />
+          ))}
       </div>
     </div>
   );
