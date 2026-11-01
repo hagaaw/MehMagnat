@@ -25,8 +25,8 @@ public class ReservationItemController {
 
     @GetMapping
     public ResponseEntity<List<ReservationItemEntity>> findAllReservationByReservationNum(String reservationNum){
-        ReservationEntity reservation = reservationService.findByReservationNum(reservationNum);
 
-        return ResponseEntity.ok(reservationItemService.findAllByReservationNum(reservation));
+
+        return ResponseEntity.ok(reservationItemService.findAllByReservationNum(reservationNum));
     }
 }

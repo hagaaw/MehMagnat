@@ -33,8 +33,9 @@ public interface ReservationItemRepository extends JpaRepository<ReservationItem
 """)
     Integer countBusy(String sku);
 
-    List<ReservationItemEntity> findAllByReservation(ReservationEntity reservation);
 
 
     void deleteAllByReservation(ReservationEntity reservation);
+
+    List<ReservationItemEntity> findAllByReservation(ReservationEntity reservation);
 }

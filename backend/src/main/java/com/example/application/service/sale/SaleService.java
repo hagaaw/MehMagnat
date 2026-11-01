@@ -61,7 +61,7 @@ public class SaleService {
         }
 
 
-        List<ReservationItemEntity> reservationItemList = reservationItemService.findAllByReservationNum(reservation);
+        List<ReservationItemEntity> reservationItemList = reservationItemService.findAllByReservationNum(reservation.getReservationNum());
         for(var reservationItem: reservationItemList){
             sum = sum.add(reservationItem.getUnitPrice().multiply(BigDecimal.valueOf(1 - reservationItem.getDiscountAmount())));
         }

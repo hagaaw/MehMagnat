@@ -26,10 +26,6 @@ public class ProductController {
     }
 
 
-    @GetMapping()
-    public ResponseEntity<List<ProductEntity>> getProducts(){
-        return ResponseEntity.ok(productService.getAll());
-    }
 
     @PostMapping("/add")
     public ResponseEntity<ProductEntity> addProduct(
@@ -39,8 +35,15 @@ public class ProductController {
         return ResponseEntity.ok(product);
     }
 
+
+    //свободных
     @GetMapping("/get_all")
     public ResponseEntity<List<ProductEntity>> getAllProducts(){
+        var products = productService.getAll();
+        if (products.isEmpty()){
+            return ResponseEntity.status(404).build();
+        }
+
         return ResponseEntity.ok(productService.getAll());
     }
 }

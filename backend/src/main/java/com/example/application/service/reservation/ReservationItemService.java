@@ -3,6 +3,7 @@ package com.example.application.service.reservation;
 import com.example.application.entity.forReservation.ReservationEntity;
 import com.example.application.entity.forReservation.ReservationItemEntity;
 import com.example.application.repository.reservation.ReservationItemRepository;
+import com.example.application.repository.reservation.ReservationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,9 +14,12 @@ import java.util.List;
 @Transactional
 public class ReservationItemService {
     private final ReservationItemRepository reservationItemRepository;
+    private final ReservationRepository reservationRepository;
 
-    public ReservationItemService(ReservationItemRepository reservationItemRepository) {
+
+    public ReservationItemService(ReservationItemRepository reservationItemRepository, ReservationRepository reservationRepository) {
         this.reservationItemRepository = reservationItemRepository;
+        this.reservationRepository = reservationRepository;
     }
 
     public Integer checkBusyInDate(String sku, LocalDate startAt, LocalDate endAt) {
@@ -26,7 +30,8 @@ public class ReservationItemService {
         reservationItemRepository.save(reservationItemEntity);
     }
 
-    public List<ReservationItemEntity> findAllByReservationNum(ReservationEntity reservation) {
+    public List<ReservationItemEntity> findAllByReservationNum(String reservationNum) {
+        ReservationEntity reservation = reservationRepository.findByReservationNum(reservationNum).orElseThrow(()-> new IllegalArgumentException("not found"));
         return reservationItemRepository.findAllByReservation(reservation);
     }
 
