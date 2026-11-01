@@ -76,21 +76,16 @@ public class ReservationService {
 
         for(var dtoProduct: listProductsAndCostumerDto.getSkuAndCount()){
             ProductEntity product = productService.findBySku(dtoProduct.getSku());
-            if (productService.findBySku(dtoProduct.getSku()).getQuantityReserved()
+            if (productService.findBySku(dtoProduct.getSku()).getQuantityOnHand()
                     < dtoProduct.getCount()){
                 throw new IllegalArgumentException();
             }
-            Integer countBusy = reservationItemService.checkBusyInDate(dtoProduct.getSku(),
-                    listProductsAndCostumerDto.getStartAt(),
-                    listProductsAndCostumerDto.getEndAt());
 
-            if ( countBusy == null){
-                countBusy = 0;
-            }
 
-            int countFreeProducts = product.getQuantityReserved() - reservationItemService.checkBusy(dtoProduct.getSku());
 
-            if (-countBusy + countFreeProducts >= dtoProduct.getCount()){
+            int countFreeProducts = product.getQuantityOnHand() - product.getQuantityReserved();
+
+            if ( countFreeProducts >= dtoProduct.getCount()){
 
                 ReservationItemEntity reservationItemEntity = new ReservationItemEntity(
                         dtoProduct.getCount(),
@@ -99,6 +94,7 @@ public class ReservationService {
                         reservation,
                         product
                 );
+                product.setQuantityReserved(product.getQuantityReserved() + dtoProduct.getCount());
                 reservationItemService.save(reservationItemEntity);
             }else {
 
@@ -122,8 +118,19 @@ public class ReservationService {
         return reservationRepository.findByReservationNum(reservationNum).orElseThrow(() -> new IllegalArgumentException("Такой брони нет"));
     }
 
+
+    //изменение статуса брони с возвратом заброниравонного товара
     public ReservationEntity setStatusReservation(String reservationNum, ReservationStatus status) {
         var reservation = reservationRepository.findByReservationNum(reservationNum).orElseThrow(()-> new IllegalArgumentException("Такой брони нет"));
+        var reservationsItems = reservationItemService.findAllByReservationNum(reservationNum);
+        for (var reservationItem: reservationsItems){
+            ProductEntity product = reservationItem.getProduct();
+
+
+            product.setQuantityReserved(product.getQuantityReserved() - reservationItem.getQuantity());
+
+
+        }
         reservation.setStatus(status);
         reservationRepository.save(reservation);
         return reservation;

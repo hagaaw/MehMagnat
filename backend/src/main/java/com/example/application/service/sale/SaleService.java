@@ -88,6 +88,7 @@ public class SaleService {
                     reservationItem.getDiscountAmount(),
                     reservationItem.getUnitPrice().multiply(BigDecimal.valueOf(1 - reservationItem.getDiscountAmount()))
             );
+            product.setQuantityOnHand(product.getQuantityOnHand() - quantity);
             product.setQuantityReserved(product.getQuantityReserved() - quantity);
             productService.saveNotNew(product);
             saleItemService.save(saleItem);

@@ -12,6 +12,9 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface ReservationItemRepository extends JpaRepository<ReservationItemEntity, Long> {
+
+
+    //просмотр занятости шуб в определенный период
     @Query("""
     SELECT SUM(ri.quantity) FROM ReservationItemEntity ri
     WHERE ri.product.sku = :sku
@@ -26,12 +29,6 @@ public interface ReservationItemRepository extends JpaRepository<ReservationItem
     );
 
 
-    @Query("""
-    SELECT SUM(ri.quantity) FROM ReservationItemEntity ri
-    WHERE ri.product.sku = :sku 
-    AND ri.reservation.status IN ('ACTUAL')
-""")
-    Integer countBusy(String sku);
 
 
 

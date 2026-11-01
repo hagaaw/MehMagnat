@@ -3,6 +3,7 @@ package com.example.application.controller;
 
 import com.example.application.entity.forProduct.*;
 import com.example.application.service.product.ProductService;
+import com.example.application.service.reservation.ReservationItemService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,12 +18,14 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {
+    private final ReservationItemService reservationItemService;
     private ProductService productService;
     private final Logger logger = LoggerFactory.getLogger(ProductController.class);
 
     @Autowired
-    public ProductController(ProductService productService){
+    public ProductController(ProductService productService, ReservationItemService reservationItemService){
         this.productService = productService;
+        this.reservationItemService = reservationItemService;
     }
 
 
@@ -36,7 +39,6 @@ public class ProductController {
     }
 
 
-    //свободных
     @GetMapping("/get_all")
     public ResponseEntity<List<ProductEntity>> getAllProducts(){
         var products = productService.getAll();
@@ -45,5 +47,15 @@ public class ProductController {
         }
 
         return ResponseEntity.ok(productService.getAll());
+    }
+
+    @GetMapping("/get/sku/{sku}")
+    public ResponseEntity<Integer> getCountNotBusy(
+            @PathVariable String sku
+    ){
+
+        var product = productService.findBySku(sku);
+
+        return ResponseEntity.ok(product.getQuantityOnHand() - product.getQuantityReserved());
     }
 }

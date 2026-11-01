@@ -5,7 +5,9 @@ import com.example.application.entity.forSale.SaleItemEntity;
 import com.example.application.repository.sale.SaleItemRepository;
 import com.example.application.repository.sale.SaleRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+@Transactional
 @Service
 public class SaleItemService {
     private final SaleItemRepository saleItemRepository;

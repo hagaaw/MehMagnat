@@ -34,7 +34,7 @@ public class ReservationController {
         return ResponseEntity.ok(reservationNum);
 
     }
-
+    //отмена брони по какой либо причине
     @PostMapping("/set_status_reservation")
     public ResponseEntity<ReservationEntity> setStatusReservation(
             @RequestParam String reservationNum,
