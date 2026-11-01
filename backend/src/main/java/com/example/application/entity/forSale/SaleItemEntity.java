@@ -31,7 +31,7 @@ public class SaleItemEntity {
     @JoinColumn(name="sale_id",nullable = false)
     private SaleEntity sale;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name="product_id", nullable = false)
     private ProductEntity product;
 
