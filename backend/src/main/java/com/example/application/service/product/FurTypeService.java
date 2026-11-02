@@ -27,7 +27,8 @@ public class FurTypeService {
         return furTypeRepository.findByName(furType.getName());
     }
 
-    public void save(FurTypeEntity furType) {
+    public FurTypeEntity save(FurTypeEntity furType) {
         furTypeRepository.save(furType);
+        return furType;
     }
 }

@@ -58,4 +58,14 @@ public class ProductController {
 
         return ResponseEntity.ok(product.getQuantityOnHand() - product.getQuantityReserved());
     }
+
+
+    @PutMapping("/put")
+    public ResponseEntity<ProductEntity> putProduct(
+            @RequestParam String sku,
+            @RequestBody ProductEntity product
+    ){
+        ProductEntity newProduct = productService.putProduct(sku, product);
+        return ResponseEntity.ok(newProduct);
+    }
 }

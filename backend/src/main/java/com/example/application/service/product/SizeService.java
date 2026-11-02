@@ -21,7 +21,8 @@ public class SizeService {
         return sizeRepository.findAllByName(size.getName());
     }
 
-    public void save(SizeEntity size) {
+    public SizeEntity save(SizeEntity size) {
         sizeRepository.save(size);
+        return size;
     }
 }

@@ -20,8 +20,9 @@ public class ColorService {
         return colorRepository.findByName(color.getName());
     }
 
-    public void save(ColorEntity color){
+    public ColorEntity save(ColorEntity color){
         colorRepository.save(color);
+        return color;
     }
 }
 

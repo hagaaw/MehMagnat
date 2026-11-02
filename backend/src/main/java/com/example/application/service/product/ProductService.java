@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
+
 
 
 import static com.example.application.config.AppConfig.*;
@@ -49,26 +49,7 @@ public class ProductService {
     }
 
     public void saveToDB(ProductEntity product){
-        Optional<SizeEntity> size = sizeService.findBySize(product.getSize());
-        if (size.isEmpty()){
-            sizeService.save(product.getSize());
-        }else {
-            product.setSize(size.get());
-        }
-
-        Optional<FurTypeEntity> furType = furTypeService.findByFurType(product.getFurType());
-        if (furType.isEmpty()){
-            furTypeService.save(product.getFurType());
-        }else {
-            product.setFurType(furType.get());
-        }
-
-        Optional<ColorEntity> color = colorService.findByColor(product.getColor());
-        if (color.isEmpty()){
-            colorService.save(product.getColor());
-        }else{
-            product.setColor(color.get());
-        }
+        checkForUniqueForDB(product);
         product.setSku(generatedUniqueSku());
         productRepository.save(product);
     }
@@ -94,4 +75,35 @@ public class ProductService {
     }
 
 
+    public ProductEntity putProduct(String sku, ProductEntity product) {
+        ProductEntity entity = productRepository.findBySku(sku)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + sku));
+
+        entity.setQuantityOnHand(product.getQuantityOnHand());
+        entity.setQuantityReserved(product.getQuantityReserved());
+        entity.setStatus(product.getStatus());
+        entity.setTitle(product.getTitle());
+        entity.setListPrice(product.getListPrice());
+
+        entity.setSize(product.getSize());
+        entity.setFurType(product.getFurType());
+        entity.setColor(product.getColor());
+
+        checkForUniqueForDB(entity);
+
+        return productRepository.save(entity);
+    }
+
+    private void checkForUniqueForDB(ProductEntity product) {
+        if (product.getSize() == null)    throw new IllegalArgumentException("size is required");
+        if (product.getFurType() == null) throw new IllegalArgumentException("furType is required");
+        if (product.getColor() == null)   throw new IllegalArgumentException("color is required");
+
+        product.setSize(sizeService.findBySize(product.getSize())
+                .orElseGet(() -> sizeService.save(product.getSize())));
+        product.setFurType(furTypeService.findByFurType(product.getFurType())
+                .orElseGet(() -> furTypeService.save(product.getFurType())));
+        product.setColor(colorService.findByColor(product.getColor())
+                .orElseGet(() -> colorService.save(product.getColor())));
+    }
 }
