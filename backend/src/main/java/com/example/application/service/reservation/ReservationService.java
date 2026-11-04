@@ -68,6 +68,18 @@ public class ReservationService {
 
 
     public Optional<String> madeReservation(ListProductsAndCostumerDto listProductsAndCostumerDto) {
+        // Проверяем все позиции до сохранения клиента, брони и изменения резервов.
+        if (listProductsAndCostumerDto == null
+                || listProductsAndCostumerDto.getSkuAndCount() == null
+                || listProductsAndCostumerDto.getSkuAndCount().isEmpty()) {
+            throw new IllegalArgumentException("Добавьте хотя бы один товар в бронь");
+        }
+        for (var item : listProductsAndCostumerDto.getSkuAndCount()) {
+            if (item == null || item.getCount() <= 0) {
+                throw new IllegalArgumentException("Количество товара должно быть больше нуля");
+            }
+        }
+
         var customer = customerService.saveDB(listProductsAndCostumerDto.getCustomer());
 
         ReservationEntity reservation = getNewReservationAndSave(customer,
@@ -119,18 +131,33 @@ public class ReservationService {
     }
 
 
-    //изменение статуса брони с возвратом заброниравонного товара
+    // Освобождаем резерв только при переходе из ACTUAL в INVALID.
     public ReservationEntity setStatusReservation(String reservationNum, ReservationStatus status) {
-        var reservation = reservationRepository.findByReservationNum(reservationNum).orElseThrow(()-> new IllegalArgumentException("Такой брони нет"));
-        var reservationsItems = reservationItemService.findAllByReservationNum(reservationNum);
-        for (var reservationItem: reservationsItems){
-            ProductEntity product = reservationItem.getProduct();
-
-
-            product.setQuantityReserved(product.getQuantityReserved() - reservationItem.getQuantity());
-
-
+        if (status == null) {
+            throw new IllegalArgumentException("Укажите статус брони");
         }
+
+        var reservation = reservationRepository.findByReservationNum(reservationNum)
+                .orElseThrow(() -> new IllegalArgumentException("Такой брони нет"));
+
+        // Повторная отмена ничего не меняет и не списывает резерв ещё раз.
+        if (reservation.getStatus() == status) {
+            return reservation;
+        }
+
+        // Повторная активация потребовала бы отдельной проверки и резервирования товаров.
+        if (reservation.getStatus() != ReservationStatus.ACTUAL
+                || status != ReservationStatus.INVALID) {
+            throw new IllegalArgumentException("Недопустимый переход статуса брони");
+        }
+
+        var reservationsItems = reservationItemService.findAllByReservationNum(reservationNum);
+        for (var reservationItem : reservationsItems) {
+            ProductEntity product = reservationItem.getProduct();
+            product.setQuantityReserved(
+                    product.getQuantityReserved() - reservationItem.getQuantity());
+        }
+
         reservation.setStatus(status);
         reservationRepository.save(reservation);
         return reservation;
