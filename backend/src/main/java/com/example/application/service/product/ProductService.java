@@ -79,17 +79,23 @@ public class ProductService {
         ProductEntity entity = productRepository.findBySku(sku)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found: " + sku));
 
+
+        SizeEntity resolvedSize = sizeService.findBySize(product.getSize())
+                .orElseGet(() -> sizeService.save(product.getSize()));
+        FurTypeEntity resolvedFurType = furTypeService.findByFurType(product.getFurType())
+                .orElseGet(() -> furTypeService.save(product.getFurType()));
+        ColorEntity resolvedColor = colorService.findByColor(product.getColor())
+                .orElseGet(() -> colorService.save(product.getColor()));
+
         entity.setQuantityOnHand(product.getQuantityOnHand());
         entity.setQuantityReserved(product.getQuantityReserved());
         entity.setStatus(product.getStatus());
         entity.setTitle(product.getTitle());
         entity.setListPrice(product.getListPrice());
 
-        entity.setSize(product.getSize());
-        entity.setFurType(product.getFurType());
-        entity.setColor(product.getColor());
-
-        checkForUniqueForDB(entity);
+        entity.setSize(resolvedSize);
+        entity.setFurType(resolvedFurType);
+        entity.setColor(resolvedColor);
 
         return productRepository.save(entity);
     }
