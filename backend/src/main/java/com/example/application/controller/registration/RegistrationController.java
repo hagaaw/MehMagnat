@@ -1,15 +1,13 @@
 package com.example.application.controller.registration;
 
 import com.example.application.entity.forEmployee.EmployeeEntity;
+import com.example.application.entity.forEmployee.EmployeeRole;
 import com.example.application.service.employee.EmployeeService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Tag(name="registration")
 @RestController
@@ -29,6 +27,17 @@ public class RegistrationController {
         return isSaved
                 ? ResponseEntity.ok(true)
                 : ResponseEntity.status(400).body(false);
+    }
+
+
+    @PostMapping
+    public ResponseEntity<Boolean> roleChange(@RequestParam String phone, @RequestParam EmployeeRole role){
+        return employeeService.roleChange(phone,role)? ResponseEntity.ok(true):ResponseEntity.status(400).body(false);
+    }
+
+    @DeleteMapping
+    public ResponseEntity<Boolean> deleteEmployee(@RequestParam String phone){
+        return employeeService.deleteEmployeeByPhone(phone)? ResponseEntity.ok(true):ResponseEntity.status(400).body(false);
     }
 
 

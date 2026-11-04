@@ -2,6 +2,7 @@ package com.example.application.service.employee;
 
 
 import com.example.application.entity.forEmployee.EmployeeEntity;
+import com.example.application.entity.forEmployee.EmployeeRole;
 import com.example.application.repository.employee.EmployeeRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -38,5 +39,15 @@ public class EmployeeService {
 
     public EmployeeEntity getMe() {
         return employeeRepository.findByPhone(SecurityContextHolder.getContext().getAuthentication().getName()).orElse(null);
+    }
+
+    public boolean roleChange(String phone, EmployeeRole role) {
+        var employee = employeeRepository.findByPhone(phone).orElseThrow(()->new IllegalArgumentException("not found"));
+        employee.setRole(role);
+        return true;
+    }
+
+    public boolean deleteEmployeeByPhone(String phone) {
+        return employeeRepository.deleteByPhone(phone);
     }
 }
