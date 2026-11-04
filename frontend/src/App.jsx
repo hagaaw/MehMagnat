@@ -1,5 +1,7 @@
 import { Link, NavLink, Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import { RequireAdmin, RequireStaff, useAuth } from "./auth";
+import { useCart } from "./cart";
+import Cart from "./pages/Cart";
 import Catalog from "./pages/Catalog";
 import Login from "./pages/Login";
 import ReservationSearch from "./pages/ReservationSearch";
@@ -10,6 +12,7 @@ const navClass = ({ isActive }) => "nav-link" + (isActive ? " active" : "");
 
 function Header() {
   const { user, isStaff, isAdmin, signOut } = useAuth();
+  const { totalCount } = useCart();
   const navigate = useNavigate();
 
   async function handleSignOut() {
@@ -27,6 +30,9 @@ function Header() {
 
         <nav className="main-nav" aria-label="Основное меню">
           <NavLink to="/products/catalog" className={navClass}>Каталог</NavLink>
+          <NavLink to="/cart" className={navClass}>
+            Корзина{totalCount > 0 && <span className="role-badge" style={{ marginLeft: 6 }}>{totalCount}</span>}
+          </NavLink>
           {/* Поиск брони доступен всем: покупатель - по номеру, сотрудник - ещё и по телефону */}
           <NavLink to="/reservations/search" className={navClass}>Поиск брони</NavLink>
           {isStaff && (
@@ -78,6 +84,7 @@ export default function App() {
 
           {/* Открыто для всех */}
           <Route path="/products/catalog" element={<Catalog />} />
+          <Route path="/cart" element={<Cart />} />
           <Route path="/reservations/search" element={<ReservationSearch />} />
           <Route path="/signin" element={<Login />} />
 

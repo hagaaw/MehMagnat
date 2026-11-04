@@ -1,12 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { addProduct, getFurTypes, getProduct, getProducts, updateProduct } from "../api";
+import {
+  addProduct,
+  deleteProductImage,
+  getFurTypes,
+  getProduct,
+  getProducts,
+  updateProduct,
+  uploadProductImage,
+} from "../api";
+import { getAvailable } from "../utils";
+
+const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5 МБ, как на сервере
 
 const EMPTY = {
   title: "",
   listPrice: "",
   quantityOnHand: "",
-  quantityReserved: "",
   status: "FREE",
   furType: "",
   color: "",
@@ -18,7 +29,6 @@ const toForm = (p) => ({
   title: p.title || "",
   listPrice: p.listPrice ?? "",
   quantityOnHand: p.quantityOnHand ?? "",
-  quantityReserved: p.quantityReserved ?? "",
   status: p.status || "FREE",
   furType: p.furType?.name || "",
   color: p.color?.name || "",
@@ -46,6 +56,13 @@ export default function ProductForm() {
   const [loadError, setLoadError] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(null); // сохранённый товар
+  const [warning, setWarning] = useState(""); // товар сохранён, но с фото возникла проблема
+
+  // Фото: выбранный файл, его предпросмотр и пометка «убрать текущее фото»
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [removeImage, setRemoveImage] = useState(false);
+  const [fileKey, setFileKey] = useState(0); // меняем, чтобы сбросить поле выбора файла
 
   const [furOptions, setFurOptions] = useState([]);
   const [colorOptions, setColorOptions] = useState([]);
@@ -94,6 +111,41 @@ export default function ProductForm() {
     };
   }, [id, isEdit]);
 
+  useEffect(() => {
+    if (!imageFile) {
+      setImagePreview(null);
+      return undefined;
+    }
+    const url = URL.createObjectURL(imageFile);
+    setImagePreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [imageFile]);
+
+  function handleFile(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    let problem = null;
+    if (!IMAGE_TYPES.includes(file.type)) problem = "Допустимы только JPG, PNG или WebP.";
+    else if (file.size > MAX_IMAGE_SIZE) problem = "Файл больше 5 МБ.";
+
+    setErrors((er) => ({ ...er, image: problem || undefined }));
+    if (problem) {
+      setFileKey((k) => k + 1);
+      return;
+    }
+    setImageFile(file);
+    setRemoveImage(false);
+  }
+
+  function clearImage() {
+    if (imageFile) {
+      setImageFile(null);
+      setFileKey((k) => k + 1);
+    } else if (original?.imageUrl) {
+      setRemoveImage(true);
+    }
+  }
+
   const set = (field) => (e) => {
     const value = e.target.value;
     setForm((f) => {
@@ -111,10 +163,10 @@ export default function ProductForm() {
 
     if (form.title.trim().length < 2) er.title = "Введите название.";
     if (!(Number(form.listPrice) > 0)) er.listPrice = "Цена должна быть больше 0.";
+    const reserved = Number(original?.quantityReserved) || 0;
     if (!isInt(form.quantityOnHand)) er.quantityOnHand = "Целое число, 0 или больше.";
-    if (!isInt(form.quantityReserved)) er.quantityReserved = "Целое число, 0 или больше.";
-    else if (isInt(form.quantityOnHand) && Number(form.quantityReserved) > Number(form.quantityOnHand))
-      er.quantityReserved = "Не может быть больше количества на складе.";
+    else if (Number(form.quantityOnHand) < reserved)
+      er.quantityOnHand = `Не может быть меньше забронированного (${reserved} шт.).`;
     if (!form.furType.trim()) er.furType = "Укажите вид меха.";
     if (!form.color.trim()) er.color = "Укажите цвет.";
     if (!form.sizeName.trim()) er.sizeName = "Укажите размер.";
@@ -124,6 +176,7 @@ export default function ProductForm() {
   async function handleSubmit(e) {
     e.preventDefault();
     setServerError("");
+    setWarning("");
     setSaved(null);
     const er = validate();
     setErrors(er);
@@ -133,7 +186,8 @@ export default function ProductForm() {
       title: form.title.trim(),
       listPrice: Number(form.listPrice),
       quantityOnHand: Number(form.quantityOnHand),
-      quantityReserved: Number(form.quantityReserved),
+      // Забронированное количество ведёт сервер: у новой шубы 0, при правке не трогаем
+      quantityReserved: isEdit ? Number(original?.quantityReserved) || 0 : 0,
       status: form.status,
       furType: { name: form.furType.trim() },
       color: { name: form.color.trim() },
@@ -143,25 +197,55 @@ export default function ProductForm() {
     setSaving(true);
     try {
       if (isEdit) {
-        const updated = await updateProduct(id, { ...payload, createdAt: original?.createdAt });
-        setSaved(updated || { ...original, ...payload });
+        const updated = await updateProduct(original.sku, {
+          ...payload,
+          sku: original.sku,
+          createdAt: original?.createdAt,
+        });
+        let result = updated && typeof updated === "object" ? updated : { ...original, ...payload };
+
+        // Фото обновляем отдельным запросом после сохранения полей
+        try {
+          if (imageFile) {
+            result = (await uploadProductImage(result.sku, imageFile)) || result;
+          } else if (removeImage && result.imageUrl) {
+            result = (await deleteProductImage(result.sku)) || result;
+          }
+          setImageFile(null);
+          setRemoveImage(false);
+          setFileKey((k) => k + 1);
+        } catch (imgErr) {
+          setWarning(`Изменения сохранены, но фото не обновилось: ${imgErr.message}`);
+        }
+        setOriginal(result);
+        setSaved(result);
       } else {
-        const created = await addProduct(payload); // createdAt проставит api.js
+        let created = await addProduct(payload); // createdAt проставит api.js
+
+        if (imageFile) {
+          try {
+            created = (await uploadProductImage(created.sku, imageFile)) || created;
+          } catch (imgErr) {
+            setWarning(
+              `Товар добавлен, но фото не загрузилось: ${imgErr.message} ` +
+                "Откройте товар на редактирование и загрузите фото ещё раз."
+            );
+          }
+        }
         setSaved(created);
         setForm(EMPTY);
+        setImageFile(null);
+        setFileKey((k) => k + 1);
       }
     } catch (err) {
-      setServerError(
-        isEdit && (err.status === 404 || err.status === 405)
-          ? "Редактирование пока не поддерживается сервером: нужен запрос PUT /api/products/{id}."
-          : err.message || "Не удалось сохранить товар."
-      );
+      setServerError(err.message || "Не удалось сохранить товар.");
     } finally {
       setSaving(false);
     }
   }
 
   const sizeOptions = useMemo(() => Object.keys(sizeMap).sort((a, b) => a.localeCompare(b, "ru", { numeric: true })), [sizeMap]);
+  const shownImage = imagePreview || (!removeImage ? original?.imageUrl : null) || null;
   const fieldError = (name) => errors[name] && <div className="field-error">{errors[name]}</div>;
   const cls = (name) => (errors[name] ? "invalid" : "");
 
@@ -225,14 +309,49 @@ export default function ProductForm() {
             {fieldError("listPrice")}
           </div>
           <div className="form-field">
-            <label htmlFor="pf-onhand">На складе, шт.</label>
+            <label htmlFor="pf-onhand">Всего в наличии, шт.</label>
             <input id="pf-onhand" type="number" min="0" step="1" value={form.quantityOnHand} onChange={set("quantityOnHand")} className={cls("quantityOnHand")} />
             {fieldError("quantityOnHand")}
           </div>
-          <div className="form-field">
-            <label htmlFor="pf-reserved">Доступно для брони, шт.</label>
-            <input id="pf-reserved" type="number" min="0" step="1" value={form.quantityReserved} onChange={set("quantityReserved")} className={cls("quantityReserved")} />
-            {fieldError("quantityReserved")}
+          {isEdit && (
+            <div className="form-field">
+              <div className="label">Забронировано</div>
+              <div style={{ padding: "9px 0" }}>
+                {Number(original?.quantityReserved) || 0} шт. · свободно {getAvailable(original)} шт.
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="form-field">
+          <div className="label">Фото</div>
+          <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
+            <div style={{ width: 140, flex: "none", borderRadius: 8, overflow: "hidden" }}>
+              {shownImage ? (
+                <img className="product-img" src={shownImage} alt="Фото товара" />
+              ) : (
+                <div className="product-img" aria-hidden="true">🧥</div>
+              )}
+            </div>
+            <div>
+              <input
+                key={fileKey}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleFile}
+                aria-label="Выбрать фото"
+              />
+              {shownImage && (
+                <div style={{ marginTop: 8 }}>
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={clearImage}>
+                    {imageFile ? "Не загружать выбранное" : "Удалить фото"}
+                  </button>
+                </div>
+              )}
+              <div className="hint">JPG, PNG или WebP, до 5 МБ.</div>
+              {removeImage && <div className="hint">Фото будет удалено после сохранения.</div>}
+              {fieldError("image")}
+            </div>
           </div>
         </div>
 
@@ -245,6 +364,7 @@ export default function ProductForm() {
         </div>
 
         {serverError && <div className="alert alert-error" role="alert">{serverError}</div>}
+        {warning && <div className="alert alert-warn" role="alert">{warning}</div>}
 
         {saved && (
           <div className="alert alert-success" role="status">

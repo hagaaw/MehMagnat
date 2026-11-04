@@ -44,16 +44,13 @@ function ReservationCard({ reservation: r, staff, onUpdate }) {
     }
   }
 
-  const changeStatus = (status) => {
-    const text =
-      status === "INVALID"
-        ? `Отменить бронь ${r.reservationNum}? Товары вернутся в доступные.`
-        : `Вернуть бронь ${r.reservationNum} в статус «Активна»?`;
-    if (!window.confirm(text)) return;
+  // Отмена необратима: вернуть бронь в «Активна» нельзя
+  const cancelReservation = () => {
+    if (!window.confirm(`Отменить бронь ${r.reservationNum}? Это действие нельзя отменить.`)) return;
     run(async () => {
-      const updated = await setReservationStatus(r.reservationNum, status);
+      const updated = await setReservationStatus(r.reservationNum, "INVALID");
       onUpdate({ ...r, ...updated });
-      setMessage(status === "INVALID" ? "Бронь отменена." : "Бронь снова активна.");
+      setMessage("Бронь отменена.");
     });
   };
 
@@ -133,23 +130,15 @@ function ReservationCard({ reservation: r, staff, onUpdate }) {
       {message && <div className="alert alert-success" style={{ margin: 0 }}>{message}</div>}
       {error && <div className="alert alert-error" role="alert" style={{ margin: 0 }}>{error}</div>}
 
-      {staff && (
+      {/* Действия только у активной брони. После продажи или отмены кнопок нет. */}
+      {staff && r.status === "ACTUAL" && !sold && (
         <div className="actions">
-          {!sold && r.status !== "INVALID" && (
-            <button type="button" className="btn btn-primary" onClick={makeSale} disabled={busy}>
-              Оформить продажу
-            </button>
-          )}
-          {r.status !== "INVALID" && (
-            <button type="button" className="btn btn-danger" onClick={() => changeStatus("INVALID")} disabled={busy}>
-              Отменить бронь
-            </button>
-          )}
-          {r.status === "INVALID" && (
-            <button type="button" className="btn btn-secondary" onClick={() => changeStatus("ACTUAL")} disabled={busy}>
-              Вернуть в активные
-            </button>
-          )}
+          <button type="button" className="btn btn-primary" onClick={makeSale} disabled={busy}>
+            Оформить продажу
+          </button>
+          <button type="button" className="btn btn-danger" onClick={cancelReservation} disabled={busy}>
+            Отменить бронь
+          </button>
         </div>
       )}
     </article>

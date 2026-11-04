@@ -68,6 +68,7 @@ export function resetCsrf() {
  *  query    - объект с query-параметрами
  *  json     - тело запроса (отправится как JSON)
  *  form     - объект для application/x-www-form-urlencoded
+ *  formData - объект FormData (загрузка файлов, multipart)
  *  as       - как разбирать ответ: "json" (по умолчанию) | "text" | "none"
  *  errors   - свои тексты ошибок по коду: { 400: "..." }
  *  silent401 - не вызывать глобальный обработчик 401
@@ -78,6 +79,7 @@ async function request(path, opts = {}) {
     query,
     json,
     form,
+    formData,
     as = "json",
     errors,
     silent401 = false,
@@ -103,6 +105,8 @@ async function request(path, opts = {}) {
       body = JSON.stringify(json);
     } else if (form) {
       body = new URLSearchParams(form); // Content-Type выставится сам
+    } else if (formData) {
+      body = formData; // браузер сам поставит multipart и boundary - заголовок не трогаем
     }
     if (isWrite) headers["X-XSRF-TOKEN"] = await getCsrf();
     return fetch(url, { method, headers, body, credentials: "include" });
@@ -198,8 +202,14 @@ export async function getMe() {
 // ---------------------------------------------------------------- товары и справочники
 
 /** Каталог для всех (без входа) */
-export function getProducts() {
-  return request("/api/products/get_all");
+export async function getProducts() {
+  try {
+    return (await request("/api/products/get_all")) || [];
+  } catch (e) {
+    // Пустой каталог бэкенд отдаёт как 404 - для пользователя это просто «товаров нет»
+    if (e.status === 404) return [];
+    throw e;
+  }
 }
 
 /**
@@ -242,12 +252,35 @@ export function getProduct(id) {
   return request(`/api/products/${encodeURIComponent(id)}`);
 }
 
-/** [НУЖЕН БЭК] PUT /api/products/{id} */
-export function updateProduct(id, product) {
-  return request(`/api/products/${encodeURIComponent(id)}`, {
+/**
+ * Изменить товар: PUT /api/products/put?sku=...
+ * sku - артикул товара, который меняем; product - новые значения.
+ */
+export function updateProduct(sku, product) {
+  return request("/api/products/put", {
     method: "PUT",
+    query: { sku },
     json: product,
   });
+}
+
+// ---------------------------------------------------------------- фотографии товаров
+
+/** Загрузить или заменить фото: POST /api/products/image?sku=... (multipart, поле "file"). Возвращает товар. */
+export function uploadProductImage(sku, file) {
+  const formData = new FormData();
+  formData.append("file", file);
+  return request("/api/products/image", {
+    method: "POST",
+    query: { sku },
+    formData,
+    errors: { 413: "Файл слишком большой (не больше 5 МБ)." },
+  });
+}
+
+/** Удалить фото: DELETE /api/products/image?sku=... */
+export function deleteProductImage(sku) {
+  return request("/api/products/image", { method: "DELETE", query: { sku } });
 }
 
 // ---------------------------------------------------------------- брони
@@ -339,4 +372,40 @@ export async function registerEmployee(payload) {
   });
   if (ok === false) throw new ApiError(400, "Не удалось сохранить сотрудника.");
   return ok;
+}
+
+// ---------------------------------------------------------------- управление сотрудниками (ADMIN)
+
+/** Список сотрудников: [{ id, fullName, phone, email, role, isActive, createdAt }] */
+export function getEmployees() {
+  return request("/api/registration");
+}
+
+/** Сменить роль: PUT /api/registration/role?phone=...&role=SALER|ADMIN */
+export function changeEmployeeRole(phone, role) {
+  return request("/api/registration/role", {
+    method: "PUT",
+    query: { phone, role },
+    errors: { 400: "Не удалось изменить роль." },
+  });
+}
+
+/** Включить или отключить учётную запись: PUT /api/registration/active?phone=...&active=true|false */
+export function setEmployeeActive(phone, active) {
+  return request("/api/registration/active", {
+    method: "PUT",
+    query: { phone, active: String(active) },
+    errors: { 400: "Не удалось изменить статус сотрудника." },
+  });
+}
+
+/** Удалить сотрудника: DELETE /api/registration?phone=... */
+export function deleteEmployee(phone) {
+  return request("/api/registration", {
+    method: "DELETE",
+    query: { phone },
+    errors: {
+      400: "Не удалось удалить сотрудника. Если у него уже есть продажи, лучше отключить его учётную запись.",
+    },
+  });
 }

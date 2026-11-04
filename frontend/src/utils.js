@@ -29,6 +29,20 @@ export function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(value).trim());
 }
 
+// ---------------------------------------------------------------- остатки товара
+
+/**
+ * Сколько шуб свободно для брони.
+ *   quantityOnHand   - всего в наличии
+ *   quantityReserved - сколько уже забронировано
+ * Свободно = quantityOnHand - quantityReserved (не меньше 0).
+ */
+export function getAvailable(product) {
+  const onHand = Number(product?.quantityOnHand) || 0;
+  const reserved = Number(product?.quantityReserved) || 0;
+  return Math.max(0, onHand - reserved);
+}
+
 // ---------------------------------------------------------------- деньги и числа
 
 const priceFormatter = new Intl.NumberFormat("ru-RU", {

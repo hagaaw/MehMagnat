@@ -2,14 +2,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { getProducts } from "../api";
 import { useAuth } from "../auth";
-import { formatDate, formatPrice, plural, useDebounce } from "../utils";
-import ReservationModal from "../components/ReservationModal";
+import { useCart } from "../cart";
+import { formatDate, formatPrice, getAvailable, plural, useDebounce } from "../utils";
 
 const PAGE_SIZE = 12;
 const SEP = "|"; // разделитель значений в адресной строке (в названиях запятые бывают)
-
-// Сколько штук можно забронировать. По описанию API это поле quantityReserved.
-export const getAvailable = (p) => Number(p.quantityReserved) || 0;
 
 const SORTS = {
   new: "Сначала новые",
@@ -88,7 +85,7 @@ function ProductCard({ product, onOpen }) {
   );
 }
 
-function ProductDrawer({ product, isStaff, onClose, onReserve }) {
+function ProductDrawer({ product, isStaff, onClose, onAddToCart, inCart }) {
   useEffect(() => {
     const onKey = (e) => e.key === "Escape" && onClose();
     document.addEventListener("keydown", onKey);
@@ -119,6 +116,15 @@ function ProductDrawer({ product, isStaff, onClose, onReserve }) {
           <button type="button" className="close-btn" onClick={onClose} aria-label="Закрыть">×</button>
         </div>
 
+        {product.imageUrl && (
+          <img
+            className="product-img drawer-photo"
+            src={product.imageUrl}
+            alt={product.title}
+            style={{ borderRadius: 10, marginBottom: 12 }}
+          />
+        )}
+
         <div className="product-price" style={{ fontSize: "1.4rem" }}>{formatPrice(product.listPrice)}</div>
 
         <dl className="props">
@@ -130,20 +136,32 @@ function ProductDrawer({ product, isStaff, onClose, onReserve }) {
             {product.size?.name || "—"}
             {product.size?.description && <span className="muted"> ({product.size.description})</span>}
           </dd>
-          <dt>На складе</dt><dd>{product.quantityOnHand} шт.</dd>
-          <dt>Доступно для брони</dt><dd>{available} шт.</dd>
+          <dt>Всего в наличии</dt><dd>{product.quantityOnHand} шт.</dd>
+          <dt>Забронировано</dt><dd>{Number(product.quantityReserved) || 0} шт.</dd>
+          <dt>Свободно</dt><dd>{available} шт.</dd>
           <dt>Добавлен</dt><dd>{formatDate(product.createdAt)}</dd>
         </dl>
 
         <div className="actions">
-          <button type="button" className="btn btn-primary" disabled={available <= 0} onClick={() => onReserve(product)}>
-            Забронировать
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={available - inCart <= 0}
+            onClick={() => onAddToCart(product)}
+          >
+            В корзину
           </button>
+          {inCart > 0 && (
+            <Link to="/cart" className="btn btn-secondary">В корзине: {inCart} шт. · Оформить бронь</Link>
+          )}
           {isStaff && (
             <Link to={`/products/${product.id}`} className="btn btn-secondary">Редактировать</Link>
           )}
         </div>
-        {available <= 0 && <p className="hint">Сейчас этого товара нет в наличии для брони.</p>}
+        {available <= 0 && <p className="hint">Сейчас свободных шуб этой модели нет.</p>}
+        {available > 0 && available - inCart <= 0 && (
+          <p className="hint">В корзину добавлено всё свободное количество.</p>
+        )}
       </aside>
     </div>
   );
@@ -153,6 +171,7 @@ function ProductDrawer({ product, isStaff, onClose, onReserve }) {
 
 export default function Catalog() {
   const { isStaff } = useAuth();
+  const cart = useCart();
   const [params, setParams] = useSearchParams();
 
   const [products, setProducts] = useState([]);
@@ -160,7 +179,6 @@ export default function Catalog() {
   const [error, setError] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selected, setSelected] = useState(null); // товар в drawer
-  const [reserveFor, setReserveFor] = useState(null); // товар в окне брони
 
   // --- загрузка
   const load = useCallback(async () => {
@@ -269,7 +287,7 @@ export default function Catalog() {
   sizeSel.forEach((v) => chips.push({ key: "size" + v, label: "Размер " + v, remove: () => toggle("size", v) }));
   if (min) chips.push({ key: "min", label: "от " + formatPrice(min), remove: () => update({ min: null }) });
   if (max) chips.push({ key: "max", label: "до " + formatPrice(max), remove: () => update({ max: null }) });
-  if (onlyAvail) chips.push({ key: "avail", label: "Только доступные", remove: () => update({ avail: null }) });
+  if (onlyAvail) chips.push({ key: "avail", label: "Есть в наличии", remove: () => update({ avail: null }) });
   if (status) chips.push({ key: "status", label: STATUS_LABEL[status] || status, remove: () => update({ status: null }) });
 
   const hasFilters = chips.length > 0 || !!q;
@@ -316,7 +334,7 @@ export default function Catalog() {
               </select>
               <label className="checkbox-row" style={{ marginTop: 10 }}>
                 <input type="checkbox" checked={onlyAvail} onChange={(e) => update({ avail: e.target.checked })} />
-                Только доступные для брони
+                Только со свободным остатком
               </label>
             </div>
 
@@ -407,18 +425,8 @@ export default function Catalog() {
           product={selected}
           isStaff={isStaff}
           onClose={() => setSelected(null)}
-          onReserve={(p) => {
-            setSelected(null);
-            setReserveFor(p);
-          }}
-        />
-      )}
-
-      {reserveFor && (
-        <ReservationModal
-          product={reserveFor}
-          onClose={() => setReserveFor(null)}
-          onReserved={load}
+          onAddToCart={(p) => cart.add(p, 1)}
+          inCart={cart.countOf(selected.sku)}
         />
       )}
     </div>
