@@ -45,6 +45,10 @@ public class ProductEntity {
     @Column(name="created_at", nullable = false)
     private LocalDateTime createdAt;
 
+
+    @Column(name="image_url")
+    private String imageUrl;
+
     @ManyToOne
     @JoinColumn(name="fur_type_id", nullable = false)
     private FurTypeEntity furType;

@@ -26,18 +26,21 @@ services:
       password_admin: ${password_admin:-admin123}
       phone_admin: ${phone_admin:-+70000000000}
       email_admin: ${email_admin:-admin@example.com}
+    volumes:
+      - uploads:/uploads
     depends_on:
       db:
         condition: service_healthy
     networks: [backend]
     restart: unless-stopped
 
-  # Фронтенд (React) + nginx в одном контейнере:
-  # образ собирается из ./frontend/Dockerfile, конфиг nginx уже внутри образа.
+
   nginx:
     build: ./frontend
     ports:
       - "80:80"
+    volumes:
+      - uploads:/usr/share/nginx/uploads:ro
     depends_on: [app]
     networks: [backend]
     restart: unless-stopped
@@ -47,3 +50,4 @@ networks:
 
 volumes:
   pgdata:
+  uploads:

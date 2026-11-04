@@ -37,6 +37,8 @@ public class AppSecurityConfig {
                         .requestMatchers("/api/registration/**").hasRole(EmployeeRole.ADMIN.name())
                         .requestMatchers("/api/sale/**").hasAnyRole(EmployeeRole.ADMIN.name(), EmployeeRole.SALER.name())
                         .requestMatchers("/api/reservation/set_status_reservation").hasAnyRole(EmployeeRole.ADMIN.name(), EmployeeRole.SALER.name())
+
+                        .requestMatchers("/api/me").authenticated()
                         .anyRequest().permitAll())
                 .formLogin(login -> login
                         .loginProcessingUrl("/login")
@@ -63,6 +65,8 @@ public class AppSecurityConfig {
                     .username(phone)
                     .password(employee.getPassword())
                     .roles(employee.getRole().name())
+                    // отключённый сотрудник (isActive = false) войти не может
+                    .disabled(!Boolean.TRUE.equals(employee.getIsActive()))
                     .build();
         };
     }
